@@ -45,7 +45,7 @@ int main(int argc, char * argv[]) {
 	for (li = 0; li < 100001; li++) {
 		x[0] += (1.0 + li) / li;
 		evalrules(retval, x, rule_list, 4);
-		if (li == 100000 && c <= 3) {
+		if (li == 100000 && c <= 8) {
 			c += 1;
 			li = 0;
 		}
