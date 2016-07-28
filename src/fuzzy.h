@@ -28,12 +28,23 @@ struct Rule {
 	int num_out;
 };
 
-struct Rule *create_rule(double * input[3], int num_in, double * output[3], int num_out);
+void get_fis(struct Rule ** rule_list,
+	double params[],
+	int num_in,
+	int num_out,
+	int num_rule,
+	int rules[num_rule][num_in + num_out],
+	int inmfs[],
+	int outmfs[]);
 
-void print_rule(struct Rule *rule);
+struct Rule *create_rule(double input[][3], int num_in, double output[][3], int num_out);
 
-void destroy_rule(struct Rule *rule);
+void print_rule(struct Rule * rule);
 
-void evalfis(double * out, double * x, struct Rule ** rules, int num_rule);
+void destroy_rule(struct Rule * rule);
+
+void destroy_rules(struct Rule ** rules, int num_rule);
+
+void evalrules(double * out, double * x, struct Rule ** rules, int num_rule);
 
 #endif

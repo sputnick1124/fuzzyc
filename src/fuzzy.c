@@ -176,7 +176,7 @@ void defuzzMeanOfCent(double out[],
 //	return out;
 }
 
-struct Rule *create_rule(double * input[3], int num_in, double * output[3], int num_out) {
+struct Rule *create_rule(double input[][3], int num_in, double  output[][3], int num_out) {
     int i, p;
     struct Rule *rule = malloc(sizeof(struct Rule));
     assert(rule != NULL);
@@ -240,6 +240,13 @@ void print_rule(struct Rule *rule) {
     printf("\n\n");
 }
 
+void destroy_rules(struct Rule ** rule_list, int num_rule) {
+	int i;
+	for (i = 0; i < num_rule; i++) {
+		destroy_rule(rule_list[i]);
+	}
+}
+
 void destroy_rule(struct Rule *rule) {
 	int i;
 	assert(rule != NULL);
@@ -247,14 +254,14 @@ void destroy_rule(struct Rule *rule) {
 		free(rule->input[i]);
 	}
 	free(rule->input);
-	for (i = 0; i < rule->num_in; i++) {
+	for (i = 0; i < rule->num_out; i++) {
 		free(rule->output[i]);
 	}
 	free(rule->output);
 	free(rule);
 }
 
-void evalfis(double * out, double * x, struct Rule ** rules, int num_rule) {
+void evalrules(double * out, double * x, struct Rule ** rules, int num_rule) {
 	int r, in;
 	double firing_strengths[num_rule];
 	double s_temp[rules[0]->num_in];
@@ -306,3 +313,69 @@ void evalfis(double * out, double * x, struct Rule ** rules, int num_rule) {
 		firing_strengths);
 }
 
+void get_fis(struct Rule ** rule_list,
+	double params[],
+	int num_in,
+	int num_out,
+	int num_rule,
+	int rules[num_rule][num_in + num_out],
+	int inmfs[],
+	int outmfs[]) {
+
+	int in, out, rule;
+	int pin, pout;
+
+	int ppoint, out_start;
+	int _b;
+
+	for (rule = 0; rule < num_rule; rule++) {
+		#ifdef DEBUG
+			printf("RULE%d\n",rule);
+		#endif
+		double input_list[num_in][3];
+		double output_list[num_out][3];
+		for (in = 0; in < num_in; in++) {
+			ppoint = 0;
+			if (in > 0) {
+				for (_b = in-1; _b >= 0; _b--) {
+					ppoint += 3 * inmfs[_b];
+				}
+			} else { };
+			ppoint += 3 * rules[rule][in];
+			for (pin = 0; pin < 3; pin++) {
+				#ifdef DEBUG
+					printf("get_fis: INPUT:");
+					printf("in = %d, pin = %d, ppoint = %d\n",in,pin,ppoint);
+				#endif
+				input_list[in][pin] = params[ppoint];
+				ppoint += 1;
+			}
+		}
+
+		out_start = 0;
+		for (in = 0; in < num_in; in++) {
+			out_start += 3 * inmfs[in];
+		}
+
+		for (out = 0; out < num_out; out++) {
+			ppoint = out_start;
+			if (out > 0) {
+				for (_b = out-1; _b >= 0; _b--) {
+					ppoint += 3 * outmfs[_b];
+				}
+			} else { };
+			ppoint += 3 * rules[rule][num_in + out];
+			for (pout = 0; pout < 3; pout++) {
+				#ifdef DEBUG
+//					printf("get_fis: OUTPUT: out = %d\n",out);
+//					printf("get_fis: OUTPUT: pout = %d\n",pout);
+					printf("get_fis: OUTPUT: ppoint = %d\n",ppoint);
+				#endif
+				output_list[out][pout] = params[ppoint];
+				ppoint += 1;
+			}
+		}
+
+		rule_list[rule] = create_rule(input_list, num_in, output_list, num_out);
+	}
+}

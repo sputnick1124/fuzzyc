@@ -51,21 +51,21 @@ int main(int argc, char * argv[]) {
 	}
 
 
-	evalfis(retval, x, rule_list, 4);
+	evalrules(retval, x, rule_list, 4);
 
 	printf("%0.5f\n", retval[0]);
 	long long unsigned li;
 	for (li = 0; li < 100000; li++) {
 		x[0] += (1.0 + li) / li;
-		evalfis(retval, x, rule_list, 4);
+		evalrules(retval, x, rule_list, 4);
 	}
 	for (li = 0; li < 100000; li++) {
 		x[0] += (1.0 + li) / li;
-		evalfis(retval, x, rule_list, 4);
+		evalrules(retval, x, rule_list, 4);
 	}
 	for (li = 0; li < 100000; li++) {
 		x[0] += (1.0 + li) / li;
-		evalfis(retval, x, rule_list, 4);
+		evalrules(retval, x, rule_list, 4);
 	}
 //	evalfis(retval, x, rule_list, 4);
 
