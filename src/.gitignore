@@ -1,0 +1,7 @@
+*
+!/**/
+!*.*
+*.o
+gmon.*
+prof_output
+scratch*
