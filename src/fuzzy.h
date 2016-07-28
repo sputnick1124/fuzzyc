@@ -10,16 +10,16 @@ double inTriMF(double params[3], double x);
 void outTriMF(double x[][4], double * params[3], int num_out, double y);
 
 void defuzzWMeanOfCent(double * out,
-					   int num_rule,
-					   int num_out,
-					   double traps[num_rule][num_out][4],
-					   double firingStrengths[num_rule]);
+	int num_rule,
+	int num_out,
+	double traps[num_rule][num_out][4],
+	double firingStrengths[num_rule]);
 
 void defuzzMeanOfCent(double * out,
-					  int num_rule,
-					  int num_out,
-					  double traps[num_rule][num_out][4],
-					  double firingStrengths[num_rule]);
+	int num_rule,
+	int num_out,
+	double traps[num_rule][num_out][4],
+	double firingStrengths[num_rule]);
 
 struct Rule {
 	double ** input;

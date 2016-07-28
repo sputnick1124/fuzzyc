@@ -90,10 +90,11 @@ void outTriMF(double x[][4], double * params[], int num_out, double y) {
 }
 
 void defuzzWMeanOfCent(double out[],
-					   int num_rule,
-					   int num_out,
-					   double traps[num_rule][num_out][4],
-					   double firing_strengths[num_rule]) {
+	int num_rule,
+	int num_out,
+	double traps[num_rule][num_out][4],
+	double firing_strengths[num_rule]) {
+
 	int r, o;
 	double mom, ht;
 	double a, b, c, d;
@@ -134,10 +135,11 @@ void defuzzWMeanOfCent(double out[],
 }
 
 void defuzzMeanOfCent(double out[],
-					  int num_rule,
-					  int num_out,
-					  double traps[num_rule][num_out][4],
-					  double firing_strengths[num_rule]) {
+	int num_rule,
+	int num_out,
+	double traps[num_rule][num_out][4],
+	double firing_strengths[num_rule]) {
+
 	int r, o;
 	double mom;
 	double a, b, c, d;
@@ -298,9 +300,9 @@ void evalfis(double * out, double * x, struct Rule ** rules, int num_rule) {
 		#endif
 	}
 	defuzzMeanOfCent(out,
-					 num_rule,
-					 rules[0]->num_out,
-					 out_vals,
-					 firing_strengths);
+		num_rule,
+		rules[0]->num_out,
+		out_vals,
+		firing_strengths);
 }
 
