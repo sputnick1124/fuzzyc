@@ -2,3 +2,4 @@ scratch*
 *.out
 prof_output
 *.o
+*.so

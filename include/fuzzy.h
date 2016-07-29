@@ -37,7 +37,7 @@ void get_fis(struct Rule ** rule_list,
 	int inmfs[],
 	int outmfs[]);
 
-struct Rule *create_rule(double input[][3], int num_in, double output[][3], int num_out);
+struct Rule *create_rule(double (*input)[3], int num_in, double (*output)[3], int num_out);
 
 void print_rule(struct Rule * rule);
 

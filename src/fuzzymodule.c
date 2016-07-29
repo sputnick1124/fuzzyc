@@ -2,6 +2,13 @@
 #include <stdio.h>
 #include "fuzzy.h"
 
+#ifdef PYTHON2
+#pragma message("Using PYTHON2")
+#endif
+#ifdef PYTHON3
+#pragma message("Using PYTHON3")
+#endif
+
 static PyObject *
 fuzzy_evalrules(PyObject *self, PyObject *args) {
 	PyObject *x;
@@ -81,7 +88,12 @@ fuzzy_evalrules(PyObject *self, PyObject *args) {
 				//nothing left in rule
 				break;
 			}
+			#ifdef PYTHON2
 			c_rules[i][j] = (int) PyInt_AsLong(next);
+			#endif
+			#ifdef PYTHON3
+			c_rules[i][j] = (int) PyLong_AsLong(next);
+			#endif
 //			printf("%d",c_rules[i][j]);
 		}
 	}
@@ -101,7 +113,13 @@ fuzzy_evalrules(PyObject *self, PyObject *args) {
 			break;
 		}
 
+		#ifdef PYTHON2
 		c_inmfs[i] = (int) PyInt_AsLong(next);
+		#endif
+		#ifdef PYTHON3
+		c_inmfs[i] = (int) PyLong_AsLong(next);
+		#endif
+
 //		printf("%d ",c_inmfs[i]);
 	}
 //	printf("]\n\n");
@@ -119,7 +137,13 @@ fuzzy_evalrules(PyObject *self, PyObject *args) {
 			break;
 		}
 
+		#ifdef PYTHON2
 		c_outmfs[i] = (int) PyInt_AsLong(next);
+		#endif
+		#ifdef PYTHON3
+		c_outmfs[i] = (int) PyLong_AsLong(next);
+		#endif
+
 //		printf("%d ",c_outmfs[i]);
 	}
 //	printf("]\n\n");
@@ -134,6 +158,11 @@ fuzzy_evalrules(PyObject *self, PyObject *args) {
 	for (i = 0; i < num_out; i++) {
 		PyList_SetItem(RetList, i, PyFloat_FromDouble(retval[i]));
 	}
+
+	for (i = 0; i < 4; i++) {
+		destroy_rule(c_rule_list[i]);
+	}
+
 	return RetList;
 }
 
@@ -143,10 +172,29 @@ static PyMethodDef FuzzyMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+#ifdef PYTHON2
 PyMODINIT_FUNC
 initfuzzy(void)
 {
     (void) Py_InitModule("fuzzy", FuzzyMethods);
 }
+#endif
+
+#ifdef PYTHON3
+static struct PyModuleDef fuzzymodule = {
+	PyModuleDef_HEAD_INIT,
+	"fuzzy",   /* name of module */
+	NULL, /* module documentation, may be NULL */
+	-1,       /* size of per-interpreter state of the module,
+                or -1 if the module keeps state in global variables. */
+	FuzzyMethods
+};
+
+PyMODINIT_FUNC
+PyInit_fuzzy(void)
+{
+	return PyModule_Create(&fuzzymodule);
+}
+#endif
 
 

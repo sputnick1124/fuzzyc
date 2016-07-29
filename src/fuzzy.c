@@ -6,6 +6,7 @@
 #include "fuzzy.h"
 
 double minimum(int n_val, double values[n_val]) {
+	/*Find minimum value in an array of doubles*/
 	double min = HUGE_VAL;
 	int i;
 	for (i = 0; i < n_val; i++) {
@@ -15,6 +16,7 @@ double minimum(int n_val, double values[n_val]) {
 }
 
 double maximum(int n_val, double values[n_val]) {
+	/*Find maximum value in an array of doubles*/
 	double max = 0;
 	int i;
 	for (i = 0; i < n_val; i++) {
@@ -24,6 +26,7 @@ double maximum(int n_val, double values[n_val]) {
 }
 
 double inTriMF(double params[3], double x) {
+	/**/
 	double a = params[0];
 	double x_star = params[1];
 	double b = params[2];
@@ -176,7 +179,7 @@ void defuzzMeanOfCent(double out[],
 //	return out;
 }
 
-struct Rule *create_rule(double input[][3], int num_in, double  output[][3], int num_out) {
+struct Rule *create_rule(double (*input)[3], int num_in, double (*output)[3], int num_out) {
     int i, p;
     struct Rule *rule = malloc(sizeof(struct Rule));
     assert(rule != NULL);
