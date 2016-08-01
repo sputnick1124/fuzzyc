@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <stdio.h>
-#include "fuzzy.h"
+#include "../include/fuzzy.h"
 
 #ifdef PYTHON2
 #pragma message("Using PYTHON2")

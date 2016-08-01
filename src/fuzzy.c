@@ -3,7 +3,7 @@
 #include <math.h>
 #include <assert.h>
 
-#include "fuzzy.h"
+#include "../include/fuzzy.h"
 
 double minimum(int n_val, double values[n_val]) {
 	/*Find minimum value in an array of doubles*/
@@ -50,6 +50,12 @@ double inTriMF(double params[3], double x) {
 		b2 = 0;
 	}
 
+	if (x > b) {
+		x = b;
+	} else if (x < a) {
+		x = a;
+	}
+
 	if (x < x_star) {
 		return fmax((m1 * x) + b1, 0);
 	} else if ( x > x_star) {
@@ -92,6 +98,33 @@ void outTriMF(double x[][4], double * params[], int num_out, double y) {
 	}
 }
 
+void defuzzWeightedMV(double out[],
+	int num_rule,
+	int num_out,
+	double traps[num_rule][num_out][4],
+	double firing_strengths[num_rule]) {
+
+	int r, o;
+	double hmv, ht;
+	ht = 0;
+	hmv = 0;
+	for (o = 0; o < num_out; o++) {
+		for (r = 0; r < num_rule; r++) {
+			if (!firing_strengths[r]) {continue;}
+			ht += firing_strengths[r];
+			hmv += firing_strengths[r] * (traps[r][o][2] + traps[r][o][1]) / 2;
+			#ifdef DEBUG
+			printf("%f, %f, %f\n", firing_strengths[r], traps[r][o][1], traps[r][o][2]);
+			printf("defuzzWeightedMV: rule %d: out %d\nht = %f\nhmv = %f\n",
+				r, o, ht, hmv);
+			#endif
+		}
+		out[o] = (ht ? hmv / ht : 0);
+	}
+//	return out;
+}
+
+
 void defuzzWMeanOfCent(double out[],
 	int num_rule,
 	int num_out,
@@ -105,7 +138,6 @@ void defuzzWMeanOfCent(double out[],
 	double s_temp;
 	mom = 0;
 	ht = 0;
-	out = 0;
 	for (o = 0; o < num_out; o++) {
 		for (r = 0; r < num_rule; r++) {
 			a = traps[r][o][2] - traps[r][o][1];
@@ -179,7 +211,7 @@ void defuzzMeanOfCent(double out[],
 //	return out;
 }
 
-struct Rule *create_rule(double (*input)[3], int num_in, double (*output)[3], int num_out) {
+struct Rule *create_rule(double input[][3], int num_in, double output[][3], int num_out) {
     int i, p;
     struct Rule *rule = malloc(sizeof(struct Rule));
     assert(rule != NULL);
@@ -309,7 +341,7 @@ void evalrules(double * out, double * x, struct Rule ** rules, int num_rule) {
 		printf("]\n\n\n");
 		#endif
 	}
-	defuzzMeanOfCent(out,
+	defuzzWeightedMV(out,
 		num_rule,
 		rules[0]->num_out,
 		out_vals,

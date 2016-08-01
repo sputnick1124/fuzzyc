@@ -9,6 +9,12 @@ double inTriMF(double params[3], double x);
 
 void outTriMF(double x[][4], double * params[3], int num_out, double y);
 
+void defuzzWeightedMV(double * out,
+	int num_rule,
+	int num_out,
+	double traps[num_rule][num_out][4],
+	double firingStrengths[num_rule]);
+
 void defuzzWMeanOfCent(double * out,
 	int num_rule,
 	int num_out,
@@ -37,7 +43,7 @@ void get_fis(struct Rule ** rule_list,
 	int inmfs[],
 	int outmfs[]);
 
-struct Rule *create_rule(double (*input)[3], int num_in, double (*output)[3], int num_out);
+struct Rule *create_rule(double input[][3], int num_in, double output[][3], int num_out);
 
 void print_rule(struct Rule * rule);
 

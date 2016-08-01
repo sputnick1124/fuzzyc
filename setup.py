@@ -10,7 +10,8 @@ else:
 module1 = Extension('fuzzy',
                     sources = ['src/fuzzymodule.c', 'src/fuzzy.c'],
 					include_dirs = ['include'],
-					define_macros = macros)
+					define_macros = macros,
+					extra_compile_args=["-O4"])
 
 setup (name = 'fuzzy',
        version = '1.0',

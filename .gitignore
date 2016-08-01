@@ -3,3 +3,8 @@ scratch*
 prof_output
 *.o
 *.so
+*.in
+config.*
+aclocal*
+compile
+auto*
