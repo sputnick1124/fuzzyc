@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "../include/ga.h"
+#include "../include/fuzzy.h"
 
 int prod_i(int mults[], size_t len) {
 	int retval = 1;
@@ -36,6 +40,32 @@ void init_partition(double params[], int num_sets) {
 	}
 }
 
+void rand_partition(double params[], int num_sets) {
+	int p;
+	double r;
+	int num_params = num_sets * 3;
+	srand48((long int)clock());
+	params[0] = 0; params[1] = 0; //Set lower bounds
+	params[num_params-1] = 1;	//Set upper bounds
+	params[num_params-2] = 1;
+	double I = 1 / ((double) num_sets - 1); //Interval to divide up the fuzzy partition
+
+	for (p = 2; p < num_params - 2; p++) {
+		r = drand48() * I; //random shift from partition division
+		if (p == 3) {
+			params[p] = r; //Don't want the first element slipping below 0...
+		} else if ( p == num_params - 4) {
+			params[p] = ((p / 3) - 1) * I - r; //...or the last past 1
+		} else if (p % 3 == 0) { //a_i
+			params[p] = ((p / 3) - 1) * I + r - (I / 2);
+		} else if (p % 3 == 1) { //b_i
+			params[p] = ((p-1) / 3) * I + r - (I / 2);
+		} else { //c_i
+			params[p] = (((p-2) / 3) + 1) * I + r - (I / 2);
+		}
+	}
+}
+
 void init_params(double params[], int num_in, int in_mfs[], int num_out, int out_mfs[]) {
 	int in, out, p;
 
@@ -52,7 +82,23 @@ void init_params(double params[], int num_in, int in_mfs[], int num_out, int out
 	}
 }
 
-void init_rules(int num_in, int rules[][num_in], int in_mfs[]) {
+void rand_params(double params[], int num_in, int in_mfs[], int num_out, int out_mfs[]) {
+	int in, out, p;
+
+	p = in_mfs[0];
+	rand_partition(params, p);
+	for (in = 1; in < num_in; in++) {
+		rand_partition(&params[p * 3], in_mfs[in]);
+		p += in_mfs[in];
+	}
+
+	for (out = 0; out < num_out; out++) {
+		rand_partition(&params[p * 3], out_mfs[out]);
+		p += out_mfs[out];
+	}
+}
+
+void init_antecedents(int num_in, int num_out, int rules[][num_in + num_out], int in_mfs[]) {
 	int in, rule;
 	unsigned int flag = 0;
 	int num_rule = 1;
@@ -82,41 +128,4 @@ void init_rules(int num_in, int rules[][num_in], int in_mfs[]) {
 			}
 		}
 	}
-}
-
-int main(int argc, char * argv[]) {
-	int in_mfs[3] = {3, 4, 2};
-	int num_in = 3;
-	int out_mfs[1] = {3};
-	int num_out = 1;
-	int num_params = 3 * (sum_i(in_mfs, num_in) + sum_i(out_mfs,num_out));
-	int num_rules = prod_i(in_mfs,num_in) * prod_i(out_mfs,num_out);
-	int rules[num_rules][3];
-	double params[num_params];
-	int rule, in, p;
-
-//	init_partition(params, in_mfs[0]);
-//	init_partition(&params[in_mfs[0]*3], in_mfs[1]);
-//	init_partition(&params[sum_i(in_mfs,2)*3], in_mfs[2]);
-	init_params(params, num_in, in_mfs, num_out, out_mfs);
-
-	init_rules(num_in, rules, in_mfs);
-
-	printf("[");
-	for (p = 0; p < num_params; p++) {
-		if (p % 3 == 0) {
-			printf("|");
-		}
-		printf("%0.2f ",params[p]);
-	}
-	printf("]\n");
-
-	for (rule = 0; rule < prod_i(in_mfs, num_in); rule++) {
-		printf("[");
-		for (in = 0; in < num_in; in++) {
-			printf("%d ",rules[rule][in]);
-		}
-		printf("]\n");
-	}
-	return 0;
 }
