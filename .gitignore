@@ -3,7 +3,6 @@ scratch*
 prof_output
 *.o
 *.so
-config.*
 aclocal*
 compile
 auto*
