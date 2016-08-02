@@ -50,9 +50,9 @@ void init_partition(double params[], int num_sets) {
 		if (p % 3 == 0) { //a_i
 			params[p] = ((p / 3) - 1) * I;
 		} else if (p % 3 == 1) { //b_i
-			params[p] = ((p-1) / 3) * I;
+			params[p] = ((p - 1) / 3) * I;
 		} else { //c_i
-			params[p] = (((p-2) / 3) + 1) * I;
+			params[p] = (((p - 2) / 3) + 1) * I;
 		}
 	}
 }
@@ -62,7 +62,6 @@ void rand_partition(double params[], int num_sets) {
 	double r;
 	double tmp;
 	int num_params = num_sets * 3;
-	srand48((long int)clock());
 	params[0] = 0; params[1] = 0; //Set lower bounds
 	params[num_params-1] = 1;	//Set upper bounds
 	params[num_params-2] = 1;
@@ -70,18 +69,16 @@ void rand_partition(double params[], int num_sets) {
 
 	for (p = 2; p < num_params - 2; p++) {
 		r = drand48() * I; //random shift from partition division
-		printf("I = %0.2f\t r = %0.2f\n",I, r);
 		if (p == 3) {
-			params[p] = r; //Don't want the first element slipping below 0...
-			printf("p = r = %f\n",r);
+			params[p] = r / 2; //Don't want the first element slipping below 0...
 		} else if ( p == num_params - 4) {
-			params[p] = (((p - 2) / 3) + 1) * I - r; //...or the last past 1
+			params[p] = (((p - 2) / 3) + 1) * I - r / 2; //...or the last past 1
 		} else if (p % 3 == 0) { //a_i
 			params[p] = ((p / 3) - 1) * I + r - (I / 2);
 		} else if (p % 3 == 1) { //b_i
-			params[p] = ((p-1) / 3) * I + r - (I / 2);
+			params[p] = ((p - 1) / 3) * I + r - (I / 2);
 		} else { //c_i
-			params[p] = (((p-2) / 3) + 1) * I + r - (I / 2);
+			params[p] = (((p - 2) / 3) + 1) * I + r - (I / 2);
 		}
 	}
 }
@@ -169,7 +166,7 @@ void rand_consequents(
 	}
 }
 
-/** Crossover and mutation functions **/
+/** Crossover functions **/
 void
 sp_crossover(
 	int num_params,
@@ -178,4 +175,105 @@ sp_crossover(
 	double parent1[],
 	double parent2[])
 {
-/* Single-point crossover
+/* Single-point crossover*/
+	/*We definitely don't care about the first or last two params*/
+	int i = 2 + rand_i(num_params - 4);
+	int p;
+	for (p = 0; p < num_params; p++) {
+		child1[p] = (p <= i ? parent1[p] : parent2[p]);
+		child2[p] = (p <= i ? parent2[p] : parent1[p]);
+	}
+}
+
+void
+tp_crossover(
+	int num_params,
+	double child1[],
+	double child2[],
+	double parent1[],
+	double parent2[])
+{
+/* Two-point crossover*/
+	int i = 2 + rand_i(num_params - 2);
+	int j = (i < num_params - 2 ? i + rand_i(num_params - 2 - i) : i);
+	int p;
+	for (p = 0; p <= j; p++) {
+		child1[p] = (p <= i ? parent1[p] : parent2[p]);
+		child2[p] = (p <= i ? parent2[p] : parent1[p]);
+	}
+	for (p = j; p < num_params; p++) {
+		child1[p] = parent1[p];
+		child2[p] = parent2[p];
+	}
+}
+
+void
+blx_a_crossover(
+	int num_params,
+	double child1[],
+	double child2[],
+	double parent1[],
+	double parent2[])
+{
+/* Blended crossover with alpha exploration factor*/
+	double I;
+	double x1, x2;
+	double xmin, xmax;
+	double alpha = 0.5;
+	int p;
+	for (p = 0; p < num_params - 2; p++) {
+		xmin = fmin(parent1[p], parent2[p]);
+		xmax = fmax(parent1[p], parent2[p]);
+		I = xmax - xmin;
+		child1[p] = xmin - I * alpha + drand48() * I * 2 * alpha;
+		child2[p] = xmin - I * alpha + drand48() * I * 2 * alpha;
+	}
+	child1[num_params-2] = parent1[num_params-2];
+	child1[num_params-1] = parent1[num_params-1];
+	child2[num_params-2] = parent2[num_params-2];
+	child2[num_params-1] = parent2[num_params-1];
+}
+
+/** Mutation functions **/
+void
+param_range(
+	int num_params,
+	double ranges[num_params][2],
+	int num_in,
+	int in_mfs[],
+	int num_out,
+	int out_mfs[])
+{
+	int p = 0;
+	int in, out, mf, mfp;
+	int mfs[num_in + num_out];
+	double I;
+
+	for (in = 0; in < num_in; in++) {
+		mfs[in] = in_mfs[in];
+//		printf("%d\t%d\n",in_mfs[in],mfs[in]);
+	}
+	for (out = 0; out < num_out; out++) {
+		mfs[num_in-1 + out] = out_mfs[out];
+//		printf("%d\t%d\n",out_mfs[out],mfs[num_in-1+out]);
+	}
+
+	for (mf = 0; mf < num_in + num_out; mf++) {
+		for (mfp = 0 ; mfp < mfs[mf] * 3 - 2; p++, mfp++) {
+			I = 1 / ((double) mfs[mf] - 1);
+			ranges[p][0] = 0;
+			ranges[p][0] = I / 2;
+			if (p % 3 == 0) { //a_i
+				ranges[p][0] = ((p / 3) - 1) * I - I / 2;
+				ranges[p][1] = ((p / 3) - 1) * I + I / 2;
+			} else if (p % 3 == 1) { //b_i
+				ranges[p][0] = (((p - 1) / 3)) * I - I / 2;
+				ranges[p][1] = (((p - 1) / 3)) * I + I / 2;
+			} else { //c_i
+				ranges[p][0] = (((p - 2) / 3) + 1) * I - I / 2;
+				ranges[p][1] = (((p - 2) / 3) + 1) * I + I / 2;
+			}
+		}
+	}
+}
+
