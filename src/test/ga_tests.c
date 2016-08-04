@@ -26,7 +26,13 @@ void chromosome_print(int num_params, double chromo[]) {
 		printf("%f ",chromo[p]);
 	}
 	printf("]\n");
+}
 
+void ranges_print(int num_params, double ranges[num_params][2]) {
+	int p;
+	for (p = 0; p < num_params; p++) {
+		printf("%d: %0.3f\t%0.3f\n",p, ranges[p][0], ranges[p][1]);
+	}
 }
 
 int main(int argc, char * argv[]) {
@@ -37,6 +43,7 @@ int main(int argc, char * argv[]) {
 	int num_params = 3 * (sum_i(in_mfs, num_in) + sum_i(out_mfs,num_out));
 	int num_rules = prod_i(in_mfs,num_in);
 	int rules[num_rules][num_in + num_out];
+	int consequents[num_rules * num_out];
 	double params[num_params];
 	double testp1[num_params];
 	double testp2[num_params];
@@ -44,7 +51,7 @@ int main(int argc, char * argv[]) {
 	double testc2[num_params];
 	double testc3[num_params];
 	double testc4[num_params];
-	const double ranges[num_params][2];
+	double ranges[num_params][2];
 	int in, test;
 	int fails = 0;
 
@@ -56,7 +63,8 @@ int main(int argc, char * argv[]) {
 	rand_params(params, num_in, in_mfs, num_out, out_mfs);
 
 	init_antecedents(num_in, num_out, rules, in_mfs);
-	rand_consequents(num_in, num_out, num_rules, rules, out_mfs);
+	rand_consequents(num_out, num_rules, consequents, out_mfs);
+	add_consequents(num_in, num_out, num_rules, rules, consequents);
 
 	param_range(num_params, ranges, num_in, in_mfs, num_out, out_mfs);
 
@@ -76,7 +84,7 @@ int main(int argc, char * argv[]) {
 	/*Test that sp_crossover returns a valid list of params*/
 	printf("Testing Single-point crossover\n");
 	fails = 0;
-	for (test = 0; test < 1000000; test++) {
+	for (test = 0; test < 100000; test++) {
 		rand_params(testp1, num_in, in_mfs, num_out, out_mfs);
 		rand_params(testp2, num_in, in_mfs, num_out, out_mfs);
 		sp_crossover(num_params, testc1, testc2, testp1, testp2);
@@ -95,7 +103,7 @@ int main(int argc, char * argv[]) {
 	/*Test that tp_crossover returns a valid list of params*/
 	printf("Testing Two-point crossover\n");
 	fails = 0;
-	for (test = 0; test < 1000000; test++) {
+	for (test = 0; test < 100000; test++) {
 		rand_params(testp1, num_in, in_mfs, num_out, out_mfs);
 		rand_params(testp2, num_in, in_mfs, num_out, out_mfs);
 		tp_crossover(num_params, testc1, testc2, testp1, testp2);
@@ -111,7 +119,7 @@ int main(int argc, char * argv[]) {
 	/*Test that blx_a_crossover returns a valid list of params*/
 	printf("Testing BLX-alpha crossover\n");
 	fails = 0;
-	for (test = 0; test < 1000000; test++) {
+	for (test = 0; test < 100000; test++) {
 		rand_params(testp1, num_in, in_mfs, num_out, out_mfs);
 		rand_params(testp2, num_in, in_mfs, num_out, out_mfs);
 		blx_a_crossover(num_params, testc1, testc2, testp1, testp2);
@@ -131,7 +139,7 @@ int main(int argc, char * argv[]) {
 	rand_params(testp1, num_in, in_mfs, num_out, out_mfs);
 	rand_params(testp2, num_in, in_mfs, num_out, out_mfs);
 	blx_a_crossover(num_params, testc1, testc2, testp1, testp2);
-	for (test = 0; test < 1000000; test++) {
+	for (test = 0; test < 100000; test++) {
 		blx_a_crossover(num_params, testc3, testc4, testc1, testc2);
 		if (!(test_chromo(num_params, testc1) & test_chromo(num_params, testc2))) {
 			/*printf("Test %d failed:\n",test);
@@ -144,6 +152,48 @@ int main(int argc, char * argv[]) {
 		*testc2 = *testc4;
 	}
 	printf("%d tests failed\n",fails);
+
+
+	/*Test that mutations result in valid chromosomes*/
+	printf("Testing random mutation\n");
+	fails = 0;
+	for (test = 0; test < 100000; test++) {
+		rand_params(testp1, num_in, in_mfs, num_out, out_mfs);
+		r_mutation(num_params, ranges, testp1, 5);
+		if (!test_chromo(num_params, testp1)) {
+			/*printf("Test %d failed:\n",test);
+			chromosome_print(num_params, testc1);
+			chromosome_print(num_params, testc2);*/
+			//return 1;
+			fails++;
+		}
+		*testc1 = *testc3;
+		*testc2 = *testc4;
+	}
+	printf("%d tests failed\n",fails);
+
+	printf("Testing non-uniform random mutation\n");
+	fails = 0;
+	for (test = 0; test < 100000; test++) {
+		rand_params(testp1, num_in, in_mfs, num_out, out_mfs);
+		rb_mutation(num_params, ranges, testp1, test, 100000, 1.5, 5);
+		if (!test_chromo(num_params, testp1)) {
+			/*printf("Test %d failed:\n",test);
+			chromosome_print(num_params, testc1);
+			chromosome_print(num_params, testc2);*/
+			//return 1;
+			fails++;
+		}
+		*testc1 = *testc3;
+		*testc2 = *testc4;
+	}
+	printf("%d tests failed\n",fails);
+
+
+
+//	printf("Ranges:\n");
+//	ranges_print(num_params, ranges);
+
 
 	return 0;
 }

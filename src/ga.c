@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <math.h>
 #include <time.h>
 #include "../include/ga.h"
 #include "../include/fuzzy.h"
 
 /** Some utility functions to take care of the mechanics **/
-int prod_i(int mults[], size_t len) {
+int
+prod_i(int mults[], size_t len)
+{
 	int retval = 1;
 	int i;
 	for (i = 0; i < len; i++) {
@@ -15,7 +18,9 @@ int prod_i(int mults[], size_t len) {
 	return retval;
 }
 
-int sum_i(int adds[], size_t len) {
+int
+sum_i(int adds[], size_t len)
+{
 	int retval = 0;
 	int i;
 	for (i = 0; i < len; i++) {
@@ -24,7 +29,9 @@ int sum_i(int adds[], size_t len) {
 	return retval;
 }
 
-int rand_i(unsigned int max) {
+int
+rand_i(unsigned int max)
+{
 	/* return random integer in the range [0,max)*/
 	int r;
 	const unsigned int buckets = RAND_MAX / max;
@@ -39,7 +46,49 @@ int rand_i(unsigned int max) {
 }
 
 /** Initialization functions for starting off the GA population**/
-void init_partition(double params[], int num_sets) {
+struct Individual *
+individual_create(
+	int num_params,
+	double params[],
+	int num_rule,
+	int consequents[])
+{
+	int p, r;
+	struct Individual *ind = malloc(sizeof(struct Individual));
+	assert(ind != NULL);
+
+	ind->params = malloc(num_params * sizeof(double));
+	if (ind->params == NULL) {
+		free(ind);
+		return NULL;
+	}
+	for (p = 0; p < num_params; p++) {
+		ind->params[p] = params[p];
+	}
+
+	ind->consequents = malloc(num_rule * sizeof(int));
+	if (ind->consequents == NULL) {
+		free(ind->params);
+		free(ind);
+		return NULL;
+	}
+	for (r = 0; r < num_rule; r++) {
+		ind->consequents[r] = consequents[r];
+	}
+
+	return ind;
+}
+
+void
+individual_destroy(struct Individual * ind)
+{
+	free(ind->params);
+	free(ind->consequents);
+	free(ind);
+}
+
+void
+init_partition(double params[], int num_sets) {
 	int p;
 	int num_params = num_sets * 3;
 	params[0] = 0; params[1] = 0; //Set lower bounds
@@ -57,7 +106,9 @@ void init_partition(double params[], int num_sets) {
 	}
 }
 
-void rand_partition(double params[], int num_sets) {
+void
+rand_partition(double params[], int num_sets)
+{
 	int p;
 	double r;
 	double tmp;
@@ -83,7 +134,14 @@ void rand_partition(double params[], int num_sets) {
 	}
 }
 
-void init_params(double params[], int num_in, int in_mfs[], int num_out, int out_mfs[]) {
+void
+init_params(
+	double params[],
+	int num_in,
+	int in_mfs[],
+	int num_out,
+	int out_mfs[])
+{
 	int in, out, p;
 
 	p = in_mfs[0];
@@ -99,7 +157,14 @@ void init_params(double params[], int num_in, int in_mfs[], int num_out, int out
 	}
 }
 
-void rand_params(double params[], int num_in, int in_mfs[], int num_out, int out_mfs[]) {
+void
+rand_params(
+	double params[],
+	int num_in,
+	int in_mfs[],
+	int num_out,
+	int out_mfs[])
+{
 	int in, out, p;
 
 	p = in_mfs[0];
@@ -115,11 +180,13 @@ void rand_params(double params[], int num_in, int in_mfs[], int num_out, int out
 	}
 }
 
-void init_antecedents(int num_in,
+void
+init_antecedents(
+	int num_in,
 	int num_out,
 	int rules[][num_in + num_out],
-	int in_mfs[]) {
-
+	int in_mfs[])
+{
 	int in, rule;
 	unsigned int flag = 0;
 	int num_rule = 1;
@@ -151,17 +218,34 @@ void init_antecedents(int num_in,
 	}
 }
 
-void rand_consequents(
+void
+rand_consequents(
+	int num_out,
+	int num_rule,
+	int consequents[num_rule * num_out],
+	int out_mfs[])
+{
+	int out, rule, c;
+	c = 0;
+	for (out = 0; out < num_out; out++) {
+		for (rule = 0; rule < num_rule; c++, rule++) {
+			consequents[c] = rand_i(out_mfs[out]);
+		}
+	}
+}
+
+void
+add_consequents(
 	int num_in,
 	int num_out,
 	int num_rule,
-	int rules[][num_in + num_out],
-	int out_mfs[]) {
-
-	int out, rule;
-	for (rule = 0; rule < num_rule; rule++) {
-		for (out = 0; out < num_out; out++) {
-			rules[rule][num_in + out] = rand_i(out_mfs[out]);
+	int rules[num_rule][num_in + num_out],
+	int consequents[num_rule * num_out])
+{
+	int out, rule, c;
+	for (out = 0; out < num_out; out++) {
+		for (rule = 0; rule < num_rule; c++, rule++) {
+			rules[rule][num_in + out] = consequents[c];
 		}
 	}
 }
@@ -254,26 +338,123 @@ param_range(
 //		printf("%d\t%d\n",in_mfs[in],mfs[in]);
 	}
 	for (out = 0; out < num_out; out++) {
-		mfs[num_in-1 + out] = out_mfs[out];
-//		printf("%d\t%d\n",out_mfs[out],mfs[num_in-1+out]);
+		mfs[num_in + out] = out_mfs[out];
+//		printf("%d\t%d\n",out_mfs[out],mfs[num_in+out]);
 	}
 
 	for (mf = 0; mf < num_in + num_out; mf++) {
-		for (mfp = 0 ; mfp < mfs[mf] * 3 - 2; p++, mfp++) {
-			I = 1 / ((double) mfs[mf] - 1);
-			ranges[p][0] = 0;
-			ranges[p][0] = I / 2;
-			if (p % 3 == 0) { //a_i
-				ranges[p][0] = ((p / 3) - 1) * I - I / 2;
-				ranges[p][1] = ((p / 3) - 1) * I + I / 2;
-			} else if (p % 3 == 1) { //b_i
-				ranges[p][0] = (((p - 1) / 3)) * I - I / 2;
-				ranges[p][1] = (((p - 1) / 3)) * I + I / 2;
+		I = 1 / ((double) mfs[mf] - 1);
+		for (mfp = 0 ; mfp < mfs[mf] * 3; mfp++, p++) {
+//			printf("%d\t%d\t%d\t%d\t%d\t%d\n",p,mfp, mfp%3, mfp%3==1, mf, mfs[mf]*3);
+			if (mfp == 0 | mfp == 1
+				| mfp == mfs[mf] * 3 - 1
+				| mfp == mfs[mf] * 3 - 2) {
+//				printf("mfp in [0,1,%d,%d]\n",mfs[mf]*3-2, mfs[mf]*3-1);
+				ranges[p][0] = -1;
+				ranges[p][1] = -1;
+			} else if (mfp == 3) {
+				ranges[p][0] = 0;
+				ranges[p][1] = I / 2;
+			} else if (mfp == (mfs[mf] * 3 - 4)) {
+				ranges[p][0] = 1 - I / 2;
+				ranges[p][1] = 1;
+			} else if ((mfp % 3) == 0) { //a_i
+//				printf("mfpMOD 3 is 0\n");
+				ranges[p][0] = ((mfp / 3) - 1) * I - I / 2;
+				ranges[p][1] = ((mfp / 3) - 1) * I + I / 2;
+			} else if ((mfp % 3) == 1) { //b_i
+//				printf("mfp MOD 3 is 1\n");
+				ranges[p][0] = (((mfp - 1) / 3)) * I - I / 2;
+				ranges[p][1] = (((mfp - 1) / 3)) * I + I / 2;
 			} else { //c_i
-				ranges[p][0] = (((p - 2) / 3) + 1) * I - I / 2;
-				ranges[p][1] = (((p - 2) / 3) + 1) * I + I / 2;
+//				printf("mfp MOD 3 is 2\n");
+				ranges[p][0] = (((mfp - 2) / 3) + 1) * I - I / 2;
+				ranges[p][1] = (((mfp - 2) / 3) + 1) * I + I / 2;
 			}
 		}
 	}
 }
 
+void
+r_mutation(
+	int num_params,
+	double ranges[num_params][2],
+	double chromosome[num_params],
+	int num_genes)
+{
+	int p, i;
+	if (num_genes == NULL) {/* Default to only one mutated gene*/
+		p = rand_i(num_params);
+		chromosome[p] = ranges[p][0] + rand() * (ranges[p][1] - ranges[p][0]);
+	} else {
+		for (i = 0; i < num_genes; i++) {
+			p = rand_i(num_params);
+			chromosome[p] = ranges[p][0] + rand() * (ranges[p][1] - ranges[p][0]);
+		}
+	}
+}
+
+void
+rb_mutation(
+	int num_params,
+	double ranges[num_params][2],
+	double chromosome[num_params],
+	int cur_gen,
+	int max_gen,
+	double b,
+	int num_genes)
+{
+	int tau;
+	double r, del;
+	int p, i;
+	if (num_genes == NULL) {/* Default to only one mutated gene*/
+		tau = rand_i(1);
+		r = drand48();
+		p = rand_i(num_params);
+		if (tau) {
+			del = (chromosome[p] - ranges[p][0]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
+			chromosome[p] -= del;
+		} else {
+			del = (ranges[p][1] - chromosome[p]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
+			chromosome[p] += del;
+		}
+	} else {
+		for (i = 0; i < num_genes; i++) {
+			tau = rand_i(1);
+			r = drand48();
+			p = rand_i(num_params);
+			if (tau) {
+				del = (chromosome[p] - ranges[p][0]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
+				chromosome[p] -= del;
+			} else {
+				del = (ranges[p][1] - chromosome[p]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
+				chromosome[p] += del;
+			}
+		}
+	}
+}
+
+
+/**GA execution**/
+void
+population_init(
+	int pop_size,
+	struct Individual ** population,
+	int num_in,
+	int in_mfs[],
+	int num_out,
+	int out_mfs[],
+	int num_params,
+	int num_rules,
+	int rules[][num_in + num_out])
+{
+	int i;
+	double tmp_params[num_params];
+	int tmp_consequents[num_rules * num_out];
+
+	for (i = 0; i < pop_size; i++) {
+		rand_params(tmp_params, num_in, in_mfs, num_out, out_mfs);
+		rand_consequents(num_out, num_rules, tmp_consequents, out_mfs);
+		population[i] = individual_create(num_params, tmp_params, num_rules, tmp_consequents);
+	}
+}

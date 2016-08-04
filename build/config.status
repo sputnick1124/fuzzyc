@@ -437,7 +437,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/home/uav_master/fuzzyc/build'
+ac_pwd='/home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build'
 srcdir='..'
 INSTALL='/usr/bin/install -c'
 MKDIR_P='/bin/mkdir -p'
@@ -661,12 +661,12 @@ S["mkdir_p"]="$(MKDIR_P)"
 S["MKDIR_P"]="/bin/mkdir -p"
 S["INSTALL_STRIP_PROGRAM"]="$(install_sh) -c -s"
 S["STRIP"]=""
-S["install_sh"]="${SHELL} /home/uav_master/fuzzyc/install-sh"
-S["MAKEINFO"]="${SHELL} /home/uav_master/fuzzyc/missing makeinfo"
-S["AUTOHEADER"]="${SHELL} /home/uav_master/fuzzyc/missing autoheader"
-S["AUTOMAKE"]="${SHELL} /home/uav_master/fuzzyc/missing automake-1.14"
-S["AUTOCONF"]="${SHELL} /home/uav_master/fuzzyc/missing autoconf"
-S["ACLOCAL"]="${SHELL} /home/uav_master/fuzzyc/missing aclocal-1.14"
+S["install_sh"]="${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/install-sh"
+S["MAKEINFO"]="${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing makeinfo"
+S["AUTOHEADER"]="${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoheader"
+S["AUTOMAKE"]="${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing automake-1.14"
+S["AUTOCONF"]="${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoconf"
+S["ACLOCAL"]="${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing aclocal-1.14"
 S["VERSION"]="0.1"
 S["PACKAGE"]="libfuzzy"
 S["CYGPATH_W"]="echo"
