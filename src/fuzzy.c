@@ -296,7 +296,43 @@ void destroy_rule(struct Rule *rule) {
 	free(rule);
 }
 
-void evalrules(double * out, double * x, struct Rule ** rules, int num_rule) {
+struct Fis * fis_create(
+    double params[],
+    int num_in,
+    int num_out,
+    int num_rule,
+    int rules[num_rule][num_in + num_out],
+    int in_mfs[],
+    int out_mfs[])
+{
+	struct Fis *fis = malloc(sizeof(struct Fis));
+	assert(fis != NULL);
+
+	fis->num_rule = num_rule;
+	fis->rule_list = malloc(num_rule * sizeof(struct Rule *));
+	if (fis->rule_list == NULL) {
+		free(fis);
+		return NULL;
+	}
+
+	get_fis(fis->rule_list, params, num_in, num_out, num_rule, rules, in_mfs, out_mfs);
+	return fis;
+}
+
+void
+fis_destroy(struct Fis *fis)
+{
+	free(fis->rule_list);
+	free(fis);
+}
+
+void
+evalrules(
+	double * out,
+	double * x,
+	struct Rule ** rules,
+	int num_rule)
+{
 	int r, in;
 	double firing_strengths[num_rule];
 	double s_temp[rules[0]->num_in];
@@ -348,14 +384,16 @@ void evalrules(double * out, double * x, struct Rule ** rules, int num_rule) {
 		firing_strengths);
 }
 
+
+
 void get_fis(struct Rule ** rule_list,
 	double params[],
 	int num_in,
 	int num_out,
 	int num_rule,
 	int rules[num_rule][num_in + num_out],
-	int inmfs[],
-	int outmfs[]) {
+	int in_mfs[],
+	int out_mfs[]) {
 
 	int in, out, rule;
 	int pin, pout;
@@ -373,7 +411,7 @@ void get_fis(struct Rule ** rule_list,
 			ppoint = 0;
 			if (in > 0) {
 				for (_b = in-1; _b >= 0; _b--) {
-					ppoint += 3 * inmfs[_b];
+					ppoint += 3 * in_mfs[_b];
 				}
 			} else { };
 			ppoint += 3 * rules[rule][in];
@@ -389,14 +427,14 @@ void get_fis(struct Rule ** rule_list,
 
 		out_start = 0;
 		for (in = 0; in < num_in; in++) {
-			out_start += 3 * inmfs[in];
+			out_start += 3 * in_mfs[in];
 		}
 
 		for (out = 0; out < num_out; out++) {
 			ppoint = out_start;
 			if (out > 0) {
 				for (_b = out-1; _b >= 0; _b--) {
-					ppoint += 3 * outmfs[_b];
+					ppoint += 3 * out_mfs[_b];
 				}
 			} else { };
 			ppoint += 3 * rules[rule][num_in + out];

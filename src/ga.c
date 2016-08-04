@@ -292,6 +292,28 @@ tp_crossover(
 }
 
 void
+consequent_crossover(
+	int num_params,
+	int child1[],
+	int child2[],
+	int parent1[],
+	int parent2[])
+{
+/* Two-point crossover*/
+	int i = 2 + rand_i(num_params - 2);
+	int j = (i < num_params - 2 ? i + rand_i(num_params - 2 - i) : i);
+	int p;
+	for (p = 0; p <= j; p++) {
+		child1[p] = (p <= i ? parent1[p] : parent2[p]);
+		child2[p] = (p <= i ? parent2[p] : parent1[p]);
+	}
+	for (p = j; p < num_params; p++) {
+		child1[p] = parent1[p];
+		child2[p] = parent2[p];
+	}
+}
+
+void
 blx_a_crossover(
 	int num_params,
 	double child1[],
@@ -316,6 +338,30 @@ blx_a_crossover(
 	child1[num_params-1] = parent1[num_params-1];
 	child2[num_params-2] = parent2[num_params-2];
 	child2[num_params-1] = parent2[num_params-1];
+}
+
+void
+individual_crossover(
+	int num_params,
+	int num_rules,
+	int num_out,
+	struct Individual *p_ind1,
+	struct Individual *p_ind2,
+	struct Individual *c_ind1,
+	struct Individual *c_ind2)
+{
+	blx_a_crossover(
+		num_params,
+		c_ind1->params,
+		c_ind2->params,
+		p_ind1->params,
+		p_ind2->params);
+	consequent_crossover(
+		num_rules * num_out,
+		c_ind1->consequents,
+		c_ind2->consequents,
+		p_ind1->consequents,
+		p_ind2->consequents);
 }
 
 /** Mutation functions **/
@@ -383,14 +429,11 @@ r_mutation(
 	int num_genes)
 {
 	int p, i;
-	if (num_genes == NULL) {/* Default to only one mutated gene*/
-		p = rand_i(num_params);
-		chromosome[p] = ranges[p][0] + rand() * (ranges[p][1] - ranges[p][0]);
-	} else {
-		for (i = 0; i < num_genes; i++) {
+	for (i = 0; i < num_genes; i++) {
+		do {
 			p = rand_i(num_params);
-			chromosome[p] = ranges[p][0] + rand() * (ranges[p][1] - ranges[p][0]);
-		}
+		} while (ranges[p][0] == -1);
+		chromosome[p] = ranges[p][0] + rand() * (ranges[p][1] - ranges[p][0]);
 	}
 }
 
@@ -407,10 +450,12 @@ rb_mutation(
 	int tau;
 	double r, del;
 	int p, i;
-	if (num_genes == NULL) {/* Default to only one mutated gene*/
-		tau = rand_i(1);
+	for (i = 0; i < num_genes; i++) {
+		tau = rand_i(2);
 		r = drand48();
-		p = rand_i(num_params);
+		do {
+			p = rand_i(num_params);
+		} while (ranges[p][0] == -1);
 		if (tau) {
 			del = (chromosome[p] - ranges[p][0]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
 			chromosome[p] -= del;
@@ -418,22 +463,64 @@ rb_mutation(
 			del = (ranges[p][1] - chromosome[p]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
 			chromosome[p] += del;
 		}
-	} else {
-		for (i = 0; i < num_genes; i++) {
-			tau = rand_i(1);
-			r = drand48();
-			p = rand_i(num_params);
-			if (tau) {
-				del = (chromosome[p] - ranges[p][0]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
-				chromosome[p] -= del;
+	}
+}
+
+void
+consequent_mutate(
+	int num_rules,
+	int num_out,
+	int consequents[],
+	int out_mfs[],
+	int num_genes)
+{
+	int con, out, gen, mf, i;
+	int mut[] = {-1, 1};
+	int tau = rand_i(2);
+	for (i = 0; i < num_genes; i++) {
+		gen = rand_i(num_rules * num_out);
+		mf = gen / (num_rules * num_out);
+		if (consequents[gen] < out_mfs[mf] - 1) {
+			if (consequents[gen] != 0) {
+				consequents[gen] += mut[tau];
 			} else {
-				del = (ranges[p][1] - chromosome[p]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
-				chromosome[p] += del;
+				consequents[gen] += 1;
 			}
+		} else {
+			consequents[gen] -= 1;
 		}
 	}
 }
 
+void
+individual_mutate(
+	struct Individual *ind,
+	int num_params,
+	double ranges[][2],
+	int cur_gen,
+	int max_gen,
+	double b,
+	int num_rules,
+	int num_out,
+	int out_mfs[],
+	int num_genes)
+{
+	rb_mutation(
+		num_params,
+		ranges,
+		ind->params,
+		cur_gen,
+		max_gen,
+		b,
+		num_genes);
+	consequent_mutate(
+		num_rules,
+		num_out,
+		ind->consequents,
+		out_mfs,
+		num_genes);
+
+}
 
 /**GA execution**/
 void
@@ -458,3 +545,6 @@ population_init(
 		population[i] = individual_create(num_params, tmp_params, num_rules, tmp_consequents);
 	}
 }
+
+void
+individual_to_fis

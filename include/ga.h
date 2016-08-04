@@ -1,6 +1,17 @@
 #ifndef _GALIB_H_
 #define _GALIB_H_
 
+struct Individual {
+	double * params;
+	int * consequents;
+};
+
+struct Individual *individual_create(
+	int num_params,
+	double params[],
+	int num_rule,
+	int consequents[]);
+
 int sum_i(int adds[], size_t len);
 
 int prod_i(int mults[], size_t len);
@@ -26,11 +37,47 @@ void add_consequents(
 	int rules[num_rule][num_in + num_out],
 	int consequents[num_rule * num_out]);
 
-void sp_crossover(int num_params, double child1[], double child2[], double parent1[], double parent2[]);
+void
+sp_crossover(
+	int num_params,
+	double child1[],
+	double child2[],
+	double parent1[],
+	double parent2[]);
 
-void tp_crossover(int num_params, double child1[], double child2[], double parent1[], double parent2[]);
+void
+tp_crossover(
+	int num_params,
+	double child1[],
+	double child2[],
+	double parent1[],
+	double parent2[]);
 
-void blx_a_crossover(int num_params, double child1[], double child2[], double parent1[], double parent2[]);
+void
+consequent_crossover(
+	int num_params,
+	int child1[],
+	int child2[],
+	int parent1[],
+	int parent2[]);
+
+void
+blx_a_crossover(
+	int num_params,
+	double child1[],
+	double child2[],
+	double parent1[],
+	double parent2[]);
+
+void
+individual_crossover(
+    int num_params,
+    int num_rules,
+    int num_out,
+    struct Individual *p_ind1,
+    struct Individual *p_ind2,
+    struct Individual *c_ind1,
+    struct Individual *c_ind2);
 
 void param_range(
 	int num_params,
@@ -55,16 +102,13 @@ void rb_mutation(
 	double b,
 	int num_genes);
 
-struct Individual {
-	double * params;
-	double * consequents;
-};
-
-struct Individual *individual_create(
-	int num_params,
-	double params[],
-	int num_rule,
-	int consequents[]);
+void
+consequent_mutate(
+    int num_rules,
+    int num_out,
+    int consequent[],
+    int out_mfs[],
+    int num_genes);
 
 void
 population_init(

@@ -40,10 +40,24 @@ void get_fis(struct Rule ** rule_list,
 	int num_out,
 	int num_rule,
 	int rules[num_rule][num_in + num_out],
-	int inmfs[],
-	int outmfs[]);
+	int in_mfs[],
+	int out_mfs[]);
 
 struct Rule *create_rule(double input[][3], int num_in, double output[][3], int num_out);
+
+struct Fis {
+	int num_rule;
+	struct Rule * rule_list[];
+};
+
+struct Fis * fis_create(
+	double params[],
+	int num_in,
+	int num_out,
+	int num_rule,
+	int rules[num_rule][num_in + num_out],
+	int in_mfs[],
+	int out_mfs[]);
 
 void print_rule(struct Rule * rule);
 
