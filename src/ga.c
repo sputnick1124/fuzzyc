@@ -45,6 +45,245 @@ rand_i(unsigned int max)
 	return (int) (r / buckets);
 }
 
+int
+rand_tri_i(int max)
+{
+	/* return integer in the range [0, max) from a triangular distribution
+	with a,c = 0, and b = max*/
+    int retval;
+    double u = drand48();
+    return max - sqrt((1 - u) * max * max);
+}
+
+struct Specs *
+specs_set(
+	int num_in,
+    int in_mfs[],
+    int num_out,
+    int out_mfs[],
+	int rules[][num_in + num_out],
+	double ranges[][2])
+{
+	int in, out, rule, ant, range, limit;
+	struct Specs * spcs = malloc(sizeof(struct Specs));
+	assert(spcs != NULL);
+
+	spcs->num_in = num_in;
+	spcs->in_mfs = malloc(num_in * sizeof(int));
+	if (spcs->in_mfs == NULL) {
+		free(spcs);
+		return NULL;
+	}
+
+	spcs->num_out = num_out;
+	spcs->out_mfs = malloc(num_out * sizeof(int));
+	if (spcs->out_mfs == NULL) {
+		free(spcs->in_mfs);
+		free(spcs);
+		return NULL;
+	}
+
+	spcs->num_rule = prod_i(in_mfs, num_in);
+	spcs->rules = malloc(spcs->num_rule * sizeof(int *));
+	if (spcs->rules == NULL) {
+		free(spcs->out_mfs);
+		free(spcs->in_mfs);
+		free(spcs);
+		return NULL;
+	}
+	for (rule = 0; rule < spcs->num_rule; rule++) {
+		spcs->rules[rule] = malloc((num_in + num_out) * sizeof(int));
+		if (spcs->rules[rule] == NULL) {
+			for ( ; rule >= 0; rule--) {
+				free(spcs->rules[rule]);
+			}
+			free(spcs->rules);
+			free(spcs->out_mfs);
+			free(spcs->in_mfs);
+			free(spcs);
+			return NULL;
+		}
+	}
+
+	spcs->num_params = 3 * (sum_i(in_mfs, num_in) + sum_i(out_mfs, num_out));
+	spcs->ranges = malloc(spcs->num_params * sizeof(double *));
+	if (spcs->ranges == NULL) {
+		for (rule = 0; rule < spcs->num_rule; rule++) {
+			free(spcs->rules[rule]);
+		}
+		free(spcs->rules);
+		free(spcs->out_mfs);
+		free(spcs->in_mfs);
+		free(spcs);
+		return NULL;
+	}
+	for (range = 0; range < spcs->num_params; range++) {
+		spcs->ranges[range] = malloc(2 * sizeof(double));
+		if (spcs->ranges[range] == NULL) {
+			for ( ; range >= 0; range--) {
+				free(spcs->ranges[range]);
+			}
+			free(spcs->ranges);
+			for (rule = 0; rule < spcs->num_rule; rule++) {
+				free(spcs->rules[rule]);
+			}
+			free(spcs->rules);
+			free(spcs->out_mfs);
+			free(spcs->in_mfs);
+			free(spcs);
+			return NULL;
+		}
+	}
+
+	for (in = 0; in < num_in; in++) {
+		spcs->in_mfs[in] = in_mfs[in];
+	}
+	for (out = 0; out < num_out; out++) {
+		spcs->out_mfs[out] = out_mfs[out];
+	}
+
+	for (rule = 0; rule < spcs->num_rule; rule++) {
+		for (ant = 0; ant < spcs->num_in; ant++) {
+			spcs->rules[rule][ant] = rules[rule][ant];
+		}
+	}
+
+	for (range = 0; range < spcs->num_params; range++) {
+		for (limit = 0; limit < 2; limit++) {
+			spcs->ranges[range][limit] = ranges[range][limit];
+			printf("%f\t%f\t\t",spcs->ranges[range][limit],ranges[range][limit]);
+		}
+		printf("\n");
+	}
+/*	init_antecedents(
+		spcs->num_in,
+		spcs->num_out,
+		(int (*)[spcs->num_in])spcs->rules,
+		spcs->in_mfs);
+	param_range(
+		spcs->num_params,
+		(double (*)[2])spcs->ranges,
+		spcs->num_in,
+		spcs->in_mfs,
+		spcs->num_out,
+		spcs->out_mfs);*/
+
+	return spcs;
+}
+
+struct Specs *
+specs_copy(struct Specs * oldspcs)
+{
+	int in, out, rule, ant, range, limit;
+	struct Specs * spcs = malloc(sizeof(struct Specs));
+	assert(spcs != NULL);
+
+	spcs->num_in = oldspcs->num_in;
+	spcs->in_mfs = malloc(spcs->num_in * sizeof(int));
+	if (spcs->in_mfs == NULL) {
+		free(spcs);
+		return NULL;
+	}
+
+	spcs->num_out = oldspcs->num_out;
+	spcs->out_mfs = malloc(spcs->num_out * sizeof(int));
+	if (spcs->in_mfs == NULL) {
+		free(spcs->in_mfs);
+		free(spcs);
+		return NULL;
+	}
+
+	spcs->num_rule = oldspcs->num_rule;
+	spcs->rules = malloc(spcs->num_rule * sizeof(int *));
+	if (spcs->rules == NULL) {
+		free(spcs->out_mfs);
+		free(spcs->in_mfs);
+		free(spcs);
+		return NULL;
+	}
+	for (rule = 0; rule < spcs->num_rule; rule++) {
+		spcs->rules[rule] = malloc((spcs->num_in + spcs->num_out) * sizeof(int));
+		if (spcs->rules[rule] == NULL) {
+			for ( ; rule >= 0; rule--) {
+				free(spcs->rules[rule]);
+			}
+			free(spcs->rules);
+			free(spcs->out_mfs);
+			free(spcs->in_mfs);
+			free(spcs);
+			return NULL;
+		}
+	}
+
+	spcs->num_params = oldspcs->num_params;
+	spcs->ranges = malloc(spcs->num_params * sizeof(double *));
+	if (spcs->ranges == NULL) {
+		for (rule = 0; rule < spcs->num_rule; rule++) {
+			free(spcs->rules[rule]);
+		}
+		free(spcs->rules);
+		free(spcs->out_mfs);
+		free(spcs->in_mfs);
+		free(spcs);
+		return NULL;
+	}
+	for (range = 0; range < spcs->num_params; range++) {
+		spcs->ranges[range] = malloc(2 * sizeof(double));
+		if (spcs->ranges[range] == NULL) {
+			for ( ; range >= 0; range--) {
+				free(spcs->ranges[range]);
+			}
+			free(spcs->ranges);
+			for (rule = 0; rule < spcs->num_rule; rule++) {
+				free(spcs->rules[rule]);
+			}
+			free(spcs->rules);
+			free(spcs->out_mfs);
+			free(spcs->in_mfs);
+			free(spcs);
+			return NULL;
+		}
+	}
+
+	for (in = 0; in < spcs->num_in; in++) {
+		spcs->in_mfs[in] = oldspcs->in_mfs[in];
+	}
+	for (out = 0; out < spcs->num_out; out++) {
+		spcs->out_mfs[out] = oldspcs->out_mfs[out];
+	}
+
+	for (rule = 0; rule < spcs->num_rule; rule++) {
+		for (ant = 0; ant < spcs->num_in; ant++) {
+			spcs->rules[rule][ant] = oldspcs->rules[rule][ant];
+		}
+	}
+
+	for (range = 0; range < spcs->num_params; range++) {
+		for (limit = 0; limit < 2; limit++) {
+			spcs->ranges[range][limit] = oldspcs->ranges[range][limit];
+		}
+	}
+
+	return spcs;
+}
+
+void
+specs_clear(struct Specs *spcs)
+{
+	int range, rule;
+	for (range = 0 ; range < spcs->num_params; range++) {
+		free(spcs->ranges[range]);
+	}
+	free(spcs->ranges);
+	for (rule = 0; rule < spcs->num_rule; rule++) {
+		free(spcs->rules[rule]);
+	}
+	free(spcs->rules);
+	free(spcs->out_mfs);
+	free(spcs->in_mfs);
+	free(spcs);
+}
+
 /** Initialization functions for starting off the GA population**/
 struct Individual *
 individual_create(
@@ -80,11 +319,36 @@ individual_create(
 }
 
 void
+individual_copy(
+	struct Individual * ind1,
+	struct Individual * ind2,
+	int num_params,
+	int num_rule)
+{
+	int rule, p;
+	for (p = 0; p < num_params; p++) {
+		ind2->params[p] = ind1->params[p];
+	}
+	for (rule = 0; rule < num_rule; rule++) {
+		ind2->consequents[rule] = ind1->consequents[rule];
+	}
+}
+
+void
 individual_destroy(struct Individual * ind)
 {
 	free(ind->params);
 	free(ind->consequents);
 	free(ind);
+}
+
+void
+individuals_destroy(struct Individual ** inds, int num_ind)
+{
+	int i;
+	for (i = 0; i < num_ind; i++) {
+		individual_destroy(inds[i]);
+	}
 }
 
 void
@@ -441,6 +705,7 @@ r_mutation(
 void
 rb_mutation(
 	int num_params,
+//	double ** ranges,
 	double ranges[num_params][2],
 	double chromosome[num_params],
 	int cur_gen,
@@ -497,6 +762,7 @@ void
 individual_mutate(
 	struct Individual *ind,
 	int num_params,
+//	double ** ranges,
 	double ranges[][2],
 	int cur_gen,
 	int max_gen,
@@ -547,3 +813,90 @@ population_init(
 	}
 }
 
+void
+population_iter(
+	struct Individual ** pop_now,
+	struct Individual ** pop_next,
+	int pop_size,
+	int rank[],
+	float elite,
+	float crossover,
+	float mutate,
+	int cur_gen,
+	int max_gen,
+	struct Specs * spcs)
+{
+	int ind, select1, select2;
+	int num_elite = pop_size * elite;
+	int num_cross = pop_size * crossover;
+	int num_mut = pop_size * mutate;
+	int num_rand = pop_size - (num_elite + num_cross + num_mut);
+	for (ind = 0; ind < pop_size; ind++) {
+		if (ind < num_elite) {
+			individual_copy(
+				pop_now[rank[ind]],
+				pop_next[ind],
+				spcs->num_params,
+				spcs->num_rule);
+		} else if (ind < num_elite + num_cross + num_mut) {
+			select1 = rand_tri_i(pop_size);
+			select2 = rand_tri_i(pop_size);
+			individual_crossover(
+				spcs->num_params,
+				spcs->num_rule,
+				spcs->num_out,
+				pop_now[rank[select1]],
+				pop_now[rank[select2]],
+				pop_next[ind],
+				pop_next[ind + 1]);
+				ind++;
+			if (ind >= num_elite + num_cross) {
+				individual_mutate(
+					pop_next[ind],
+					spcs->num_params,
+					(double (*)[2])spcs->ranges,
+					cur_gen,
+					max_gen,
+					1.5,
+					spcs->num_rule,
+					spcs->num_out,
+					spcs->out_mfs,
+					4);
+				individual_mutate(
+					pop_next[ind + 1],
+					spcs->num_params,
+					(double (*)[2])spcs->ranges,
+					cur_gen,
+					max_gen,
+					1.5,
+					spcs->num_rule,
+					spcs->num_out,
+					spcs->out_mfs,
+					4);
+			}
+		} else {
+			rand_params(
+				pop_next[ind]->params,
+				spcs->num_in,
+				spcs->in_mfs,
+				spcs->num_out,
+				spcs->out_mfs);
+			rand_consequents(
+				spcs->num_out,
+				spcs->num_rule,
+				pop_next[ind]->consequents,
+				spcs->out_mfs);
+/*			rand_params(
+				pop_next[ind + 1]->params,
+				spcs->num_in,
+				spcs->in_mfs,
+				spcs->num_out,
+				spcs->out_mfs);
+			rand_consequents(
+				spcs->num_out,
+				spcs->num_rule,
+				pop_next[ind + 1]->consequents,
+				spcs->out_mfs);*/
+		}
+	}
+}

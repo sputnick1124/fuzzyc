@@ -3,5 +3,4 @@ scratch*
 prof_output
 *.o
 *.so
-auto*
 build*

@@ -16,6 +16,26 @@ int test_chromo(int num_params, double chromo[]) {
 	}
 }
 
+int test_consequents(int num_out, int num_rule, int consequents[], int out_mfs[]) {
+	int out, rule;
+	int c = 0;
+	for (out = 0; out < num_out; out++) {
+		for (rule = 0; rule < num_rule; c++, rule++) {
+			if (consequents[c] >= out_mfs[out]) {
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
+
+int individual_test(struct Individual *ind, int num_params, int num_out, int num_rule, int out_mfs[]) {
+	int r1, r2;
+	r1 = test_chromo(num_params, ind->params);
+	r2 = test_consequents(num_out, num_rule, ind->consequents, out_mfs);
+	return (r1 + r2) == 2;
+}
+
 void chromosome_print(int num_params, double chromo[]) {
 	int p;
 	printf("[");
@@ -32,6 +52,13 @@ void ranges_print(int num_params, double ranges[num_params][2]) {
 	int p;
 	for (p = 0; p < num_params; p++) {
 		printf("%d: %0.3f\t%0.3f\n",p, ranges[p][0], ranges[p][1]);
+	}
+}
+
+void cons_print(int num_rules, int consequents[]) {
+	int r;
+	for (r = 0; r < num_rules; r++) {
+		printf("| %d |", consequents[r]);
 	}
 }
 
@@ -52,6 +79,7 @@ int main(int argc, char * argv[]) {
 	double testc3[num_params];
 	double testc4[num_params];
 	double ranges[num_params][2];
+	int ind;
 	int in, test;
 	int fails = 0;
 
@@ -189,7 +217,108 @@ int main(int argc, char * argv[]) {
 	}
 	printf("%d tests failed\n",fails);
 
+	/*Test the creation of a population and the validity of its individuals*/
+	int pop_size = 100;
+	struct Individual * population[pop_size];
+	struct Individual * tmp_pop[pop_size];
+	population_init(pop_size, population, num_in, in_mfs, num_out, out_mfs, num_params, num_rules, rules);
+	population_init(pop_size, tmp_pop, num_in, in_mfs, num_out, out_mfs, num_params, num_rules, rules);
 
+	printf("Testing the population initialization\n");
+	fails = 0;
+	for (test = 0; test < pop_size; test++) {
+		if (!individual_test(population[test], num_params, num_out, num_rules, out_mfs)) {
+			fails++;
+		}
+	}
+	printf("%d individuals are invalid\n",fails);
+
+
+	printf("Testing individual crossover\n");
+	fails = 0;
+	int ind1, ind2;
+	for (test = 0; test < 1000000; test++) {
+		ind1 = rand_i(pop_size);
+		ind2 = rand_i(pop_size);
+		individual_crossover(num_params,
+			num_rules,
+			num_out,
+			population[ind1],
+			population[ind2],
+			tmp_pop[ind1],
+			tmp_pop[ind2]);
+		if (!individual_test(tmp_pop[ind1], num_params, num_out, num_rules, out_mfs)
+			| !individual_test(tmp_pop[ind1], num_params, num_out, num_rules, out_mfs)) {
+			fails++;
+		}
+	}
+	printf("%d tests failed\n",fails);
+
+	printf("Testing individual mutation\n");
+	fails = 0;
+	for (test = 0; test < 1000000; test++) {
+		ind1 = rand_i(pop_size);
+		individual_mutate(
+			population[ind1],
+			num_params,
+			ranges,
+			test,
+			1000000,
+			1.5,
+			num_rules,
+			num_out,
+			out_mfs,
+			5);
+		if (!individual_test(population[ind1], num_params, num_out, num_rules, out_mfs)) {
+			fails++;
+		}
+	}
+	printf("%d tests failed\n",fails);
+
+	struct Specs *spcs =  specs_set(num_in, in_mfs, num_out, out_mfs, rules,ranges);
+
+	int rank[pop_size];
+	for (ind = 0; ind < pop_size; ind++) {
+		rank[ind] = pop_size - ind - 1;
+//		printf("rank[%d] = %d\n",ind,rank[ind]);
+	}
+
+	population_iter(
+		population,
+		tmp_pop,
+		pop_size,
+		rank,
+		0.05,
+		0.5,
+		0.25,
+		100,
+		100,
+		spcs);
+
+//	printf("Ranges:\n");
+//	ranges_print(num_params,(double (*)[2])spcs->ranges);
+//	ranges_print(num_params,ranges);
+
+	printf("Testing generation iteration\n");
+	fails = 0;
+	for (ind = 0; ind < pop_size; ind++) {
+		if (!individual_test(population[ind],num_params, num_out, num_rules, out_mfs)) {
+			fails++;
+			printf("ind: pop: %d\n",ind);
+			chromosome_print(num_params, population[ind]->params);
+			printf("\n\n");
+		}
+		if (!individual_test(tmp_pop[ind],num_params, num_out, num_rules, out_mfs)) {
+			fails++;
+			printf("ind: pop_new: %d\n",ind+1);
+			chromosome_print(num_params, tmp_pop[ind]->params);
+			printf("\n\n");
+		}
+	}
+	printf("%d tests failed\n",fails);
+	specs_clear(spcs);
+	individuals_destroy(population, pop_size);
+	individuals_destroy(tmp_pop, pop_size);
 
 //	printf("Ranges:\n");
 //	ranges_print(num_params, ranges);
