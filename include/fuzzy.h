@@ -47,7 +47,7 @@ struct Rule *create_rule(double input[][3], int num_in, double output[][3], int 
 
 struct Fis {
 	int num_rule;
-	struct Rule * rule_list[];
+	struct Rule ** rule_list;
 };
 
 struct Fis * fis_create(

@@ -322,6 +322,7 @@ struct Fis * fis_create(
 void
 fis_destroy(struct Fis *fis)
 {
+	destroy_rules(fis->rule_list,fis->num_rule);
 	free(fis->rule_list);
 	free(fis);
 }
@@ -384,6 +385,14 @@ evalrules(
 		firing_strengths);
 }
 
+void
+evalfis(
+	double * out,
+	double * x,
+	struct Fis * fis)
+{
+	evalrules(out, x, fis->rule_list, fis->num_rule);
+}
 
 
 void get_fis(struct Rule ** rule_list,

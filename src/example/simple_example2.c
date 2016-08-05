@@ -5,7 +5,7 @@
 
 
 double genfuzex(double x, double y) {
-	struct Rule * rule_list[4];
+//	struct Rule * rule_list[4];
 	double retval[1];
 
 	double params[] = {
@@ -23,20 +23,24 @@ double genfuzex(double x, double y) {
 	{1, 0, 1},
 	{1, 1, 2}};
 
-	int inmfs[] = {2, 2};
-	int outmfs[] = {3};
+	int in_mfs[] = {2, 2};
+	int out_mfs[] = {3};
 
-	get_fis(rule_list, params, 2, 1, 4, rules, inmfs, outmfs);
+//	get_fis(rule_list, params, 2, 1, 4, rules, in_mfs, out_mfs);
+	struct Fis * fis = fis_create(params, 2,1,4, rules,in_mfs, out_mfs);
 
 	double xin[2];
 	xin[0] = x;
 	xin[1] = y;
-	evalrules(retval, xin, rule_list, 4);
+//	evalrules(retval, xin, fis->rule_list, fis->num_rule);
+	evalfis(retval, xin, fis);
 
-	int r;
-	for (r = 0; r < 4; r++) {
-		destroy_rule(rule_list[r]);
-	}
+//	int r;
+//	for (r = 0; r < 4; r++) {
+//		destroy_rule(rule_list[r]);
+//	}
+
+	fis_destroy(fis);
 	return retval[0];
 }
 

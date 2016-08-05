@@ -242,7 +242,8 @@ add_consequents(
 	int rules[num_rule][num_in + num_out],
 	int consequents[num_rule * num_out])
 {
-	int out, rule, c;
+	int out, rule;
+	int c = 0;
 	for (out = 0; out < num_out; out++) {
 		for (rule = 0; rule < num_rule; c++, rule++) {
 			rules[rule][num_in + out] = consequents[c];
@@ -546,5 +547,3 @@ population_init(
 	}
 }
 
-void
-individual_to_fis
