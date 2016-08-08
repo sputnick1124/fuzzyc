@@ -254,9 +254,12 @@ int main(int argc, char * argv[]) {
 	}
 	printf("%d tests failed\n",fails);
 
+	struct Specs *spcs =  specs_set(num_in, in_mfs, num_out, out_mfs, rules,ranges);
+
 	printf("Testing individual mutation\n");
+	printf("ga_tests.c: num_params = %d\n",num_params);
 	fails = 0;
-	for (test = 0; test < 1000000; test++) {
+	for (test = 0; test < 10; test++) {
 		ind1 = rand_i(pop_size);
 		individual_mutate(
 			population[ind1],
@@ -274,9 +277,10 @@ int main(int argc, char * argv[]) {
 		}
 	}
 	printf("%d tests failed\n",fails);
+	ranges_print(num_params,ranges);
+	ranges_print(spcs->num_params,spcs->ranges);
 
-	struct Specs *spcs =  specs_set(num_in, in_mfs, num_out, out_mfs, rules,ranges);
-
+//	struct Specs *spcs =  specs_set(num_in, in_mfs, num_out, out_mfs, rules,ranges);
 	int rank[pop_size];
 	for (ind = 0; ind < pop_size; ind++) {
 		rank[ind] = pop_size - ind - 1;

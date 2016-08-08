@@ -6,6 +6,18 @@
 #include "../include/ga.h"
 #include "../include/fuzzy.h"
 
+
+void ranges_print_test(int num_params, double * ranges[]) {
+    int p, limit;
+    for (p = 0; p < num_params; p++) {
+		printf("%d: ",p);
+		for (limit = 0; limit < 2; limit++) {
+	        printf("%0.3f\t", ranges[p][limit]);
+		}
+		printf("\n");
+    }
+}
+
 /** Some utility functions to take care of the mechanics **/
 int
 prod_i(int mults[], size_t len)
@@ -49,9 +61,12 @@ int
 rand_tri_i(int max)
 {
 	/* return integer in the range [0, max) from a triangular distribution
-	with a,c = 0, and b = max*/
+	with a,c = 0, and b = max
+	see https://en.wikipedia.org/wiki/Triangular_distribution*/
     int retval;
     double u = drand48();
+
+	/* implicit cast to int is intentional*/
     return max - sqrt((1 - u) * max * max);
 }
 
@@ -106,6 +121,8 @@ specs_set(
 	}
 
 	spcs->num_params = 3 * (sum_i(in_mfs, num_in) + sum_i(out_mfs, num_out));
+	printf("specs_set1: ");
+	ranges_print_test(spcs->num_params,ranges);
 	spcs->ranges = malloc(spcs->num_params * sizeof(double *));
 	if (spcs->ranges == NULL) {
 		for (rule = 0; rule < spcs->num_rule; rule++) {
@@ -167,6 +184,8 @@ specs_set(
 		spcs->in_mfs,
 		spcs->num_out,
 		spcs->out_mfs);*/
+	printf("specs_set2: ");
+	ranges_print_test(spcs->num_params,spcs->ranges);
 
 	return spcs;
 }
@@ -699,6 +718,7 @@ r_mutation(
 			p = rand_i(num_params);
 		} while (ranges[p][0] == -1);
 		chromosome[p] = ranges[p][0] + rand() * (ranges[p][1] - ranges[p][0]);
+//		printf("r_mutation: range = [%f, %f]\n",ranges[p][0],ranges[p][1]);
 	}
 }
 
@@ -772,13 +792,14 @@ individual_mutate(
 	int out_mfs[],
 	int num_genes)
 {
-	rb_mutation(
+//	ranges_print_test(num_params,ranges);
+	r_mutation(
 		num_params,
 		ranges,
 		ind->params,
-		cur_gen,
-		max_gen,
-		b,
+//		cur_gen,
+//		max_gen,
+//		b,
 		num_genes);
 	consequent_mutate(
 		num_rules,
