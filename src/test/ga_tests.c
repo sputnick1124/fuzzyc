@@ -48,12 +48,6 @@ void chromosome_print(int num_params, double chromo[]) {
 	printf("]\n");
 }
 
-void ranges_print(int num_params, double ranges[num_params][2]) {
-	int p;
-	for (p = 0; p < num_params; p++) {
-		printf("%d: %0.3f\t%0.3f\n",p, ranges[p][0], ranges[p][1]);
-	}
-}
 
 void cons_print(int num_rules, int consequents[]) {
 	int r;
@@ -69,7 +63,7 @@ int main(int argc, char * argv[]) {
 	int out_mfs[] = {3};
 	int num_params = 3 * (sum_i(in_mfs, num_in) + sum_i(out_mfs,num_out));
 	int num_rules = prod_i(in_mfs,num_in);
-	int rules[num_rules][num_in + num_out];
+	int rules[num_rules * (num_in + num_out)];
 	int consequents[num_rules * num_out];
 	double params[num_params];
 	double testp1[num_params];
@@ -78,7 +72,7 @@ int main(int argc, char * argv[]) {
 	double testc2[num_params];
 	double testc3[num_params];
 	double testc4[num_params];
-	double ranges[num_params][2];
+	double ranges[num_params * 2];
 	int ind;
 	int in, test;
 	int fails = 0;
@@ -202,9 +196,9 @@ int main(int argc, char * argv[]) {
 
 	printf("Testing non-uniform random mutation\n");
 	fails = 0;
-	for (test = 0; test < 100000; test++) {
+	for (test = 0; test < 1000000; test++) {
 		rand_params(testp1, num_in, in_mfs, num_out, out_mfs);
-		rb_mutation(num_params, ranges, testp1, test, 100000, 1.5, 5);
+		rb_mutation(num_params, ranges, testp1, test, 1000000, 1.5, 5);
 		if (!test_chromo(num_params, testp1)) {
 			/*printf("Test %d failed:\n",test);
 			chromosome_print(num_params, testc1);
@@ -257,9 +251,9 @@ int main(int argc, char * argv[]) {
 	struct Specs *spcs =  specs_set(num_in, in_mfs, num_out, out_mfs, rules,ranges);
 
 	printf("Testing individual mutation\n");
-	printf("ga_tests.c: num_params = %d\n",num_params);
+//	printf("ga_tests.c: num_params = %d\n",num_params);
 	fails = 0;
-	for (test = 0; test < 10; test++) {
+	for (test = 0; test < 1000000; test++) {
 		ind1 = rand_i(pop_size);
 		individual_mutate(
 			population[ind1],
@@ -277,8 +271,8 @@ int main(int argc, char * argv[]) {
 		}
 	}
 	printf("%d tests failed\n",fails);
-	ranges_print(num_params,ranges);
-	ranges_print(spcs->num_params,spcs->ranges);
+//	ranges_print(num_params,ranges);
+//	ranges_print(spcs->num_params,spcs->ranges);
 
 //	struct Specs *spcs =  specs_set(num_in, in_mfs, num_out, out_mfs, rules,ranges);
 	int rank[pop_size];

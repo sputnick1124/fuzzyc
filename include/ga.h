@@ -28,9 +28,9 @@ struct Specs {
 	int num_out;
 	int * out_mfs;
 	int num_rule;
-	int ** rules;
+	int * rules;
 	int num_params;
-	double ** ranges;
+	double * ranges;
 };
 
 struct Specs *specs_set(
@@ -38,8 +38,8 @@ struct Specs *specs_set(
 	int in_mfs[],
 	int num_out,
 	int out_mfs[],
-	int rules[][num_in + num_out],
-	double ranges[][2]);
+	int rules[],
+	double ranges[]);
 
 struct Specs *specs_copy(struct Specs *spcs);
 
@@ -59,7 +59,7 @@ void init_params(double params[], int num_in, int in_mfs[], int num_out, int out
 
 void rand_params(double params[], int num_in, int in_mfs[], int num_out, int out_mfs[]);
 
-void init_antecedents(int num_in, int num_out, int rules[][num_in], int in_mfs[]);
+void init_antecedents(int num_in, int num_out, int rules[], int in_mfs[]);
 
 void rand_consequents(int num_out, int num_rule, int consequents[num_rule * num_out], int out_mfs[]);
 
@@ -68,7 +68,7 @@ add_consequents(
 	int num_in,
 	int num_out,
 	int num_rule,
-	int rules[num_rule][num_in + num_out],
+	int rules[num_rule * (num_in + num_out)],
 	int consequents[num_rule * num_out]);
 
 void
@@ -116,7 +116,7 @@ individual_crossover(
 void
 param_range(
 	int num_params,
-	double ranges[num_params][2],
+	double ranges[num_params * 2],
 	int num_in,
 	int in_mfs[],
 	int num_out,
@@ -125,7 +125,7 @@ param_range(
 void
 r_mutation(
 	int num_params,
-	double ranges[num_params][2],
+	double ranges[num_params * 2],
 	double chromosome[num_params],
 	int num_genes);
 
@@ -133,7 +133,7 @@ void
 rb_mutation(
 	int num_params,
 //	double **ranges,
-	double ranges[num_params][2],
+	double ranges[num_params * 2],
 	double chromosome[num_params],
 	int cur_gen,
 	int max_gen,
@@ -153,7 +153,7 @@ individual_mutate(
     struct Individual *ind,
     int num_params,
 //    double **ranges,
-    double ranges[][2],
+    double ranges[num_params * 2],
     int cur_gen,
     int max_gen,
     double b,
@@ -172,7 +172,7 @@ population_init(
     int out_mfs[],
 	int num_params,
     int num_rules,
-    int rules[][num_in + num_out]);
+    int rules[num_rules * (num_in + num_out)]);
 
 void
 population_iter(

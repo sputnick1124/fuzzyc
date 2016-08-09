@@ -7,12 +7,12 @@
 #include "../include/fuzzy.h"
 
 
-void ranges_print_test(int num_params, double * ranges[]) {
+void ranges_print_test(int num_params, double * ranges) {
     int p, limit;
-    for (p = 0; p < num_params; p++) {
+	for (p = 0; p < num_params; p++) {
 		printf("%d: ",p);
 		for (limit = 0; limit < 2; limit++) {
-	        printf("%0.3f\t", ranges[p][limit]);
+	        printf("%0.3f\t", ranges[p * 2 + limit]);
 		}
 		printf("\n");
     }
@@ -76,8 +76,8 @@ specs_set(
     int in_mfs[],
     int num_out,
     int out_mfs[],
-	int rules[][num_in + num_out],
-	double ranges[][2])
+	int rules[],
+	double ranges[])
 {
 	int in, out, rule, ant, range, limit;
 	struct Specs * spcs = malloc(sizeof(struct Specs));
@@ -99,57 +99,24 @@ specs_set(
 	}
 
 	spcs->num_rule = prod_i(in_mfs, num_in);
-	spcs->rules = malloc(spcs->num_rule * sizeof(int *));
+	spcs->rules = malloc(spcs->num_rule * (num_in + num_out) * sizeof(int));
 	if (spcs->rules == NULL) {
 		free(spcs->out_mfs);
 		free(spcs->in_mfs);
 		free(spcs);
 		return NULL;
 	}
-	for (rule = 0; rule < spcs->num_rule; rule++) {
-		spcs->rules[rule] = malloc((num_in + num_out) * sizeof(int));
-		if (spcs->rules[rule] == NULL) {
-			for ( ; rule >= 0; rule--) {
-				free(spcs->rules[rule]);
-			}
-			free(spcs->rules);
-			free(spcs->out_mfs);
-			free(spcs->in_mfs);
-			free(spcs);
-			return NULL;
-		}
-	}
 
 	spcs->num_params = 3 * (sum_i(in_mfs, num_in) + sum_i(out_mfs, num_out));
-	printf("specs_set1: ");
-	ranges_print_test(spcs->num_params,ranges);
-	spcs->ranges = malloc(spcs->num_params * sizeof(double *));
+//	printf("specs_set1: ");
+//	ranges_print_test(spcs->num_params,ranges);
+	spcs->ranges = malloc(spcs->num_params * 2 * sizeof(double));
 	if (spcs->ranges == NULL) {
-		for (rule = 0; rule < spcs->num_rule; rule++) {
-			free(spcs->rules[rule]);
-		}
 		free(spcs->rules);
 		free(spcs->out_mfs);
 		free(spcs->in_mfs);
 		free(spcs);
 		return NULL;
-	}
-	for (range = 0; range < spcs->num_params; range++) {
-		spcs->ranges[range] = malloc(2 * sizeof(double));
-		if (spcs->ranges[range] == NULL) {
-			for ( ; range >= 0; range--) {
-				free(spcs->ranges[range]);
-			}
-			free(spcs->ranges);
-			for (rule = 0; rule < spcs->num_rule; rule++) {
-				free(spcs->rules[rule]);
-			}
-			free(spcs->rules);
-			free(spcs->out_mfs);
-			free(spcs->in_mfs);
-			free(spcs);
-			return NULL;
-		}
 	}
 
 	for (in = 0; in < num_in; in++) {
@@ -159,33 +126,20 @@ specs_set(
 		spcs->out_mfs[out] = out_mfs[out];
 	}
 
-	for (rule = 0; rule < spcs->num_rule; rule++) {
-		for (ant = 0; ant < spcs->num_in; ant++) {
-			spcs->rules[rule][ant] = rules[rule][ant];
-		}
-	}
-
-	for (range = 0; range < spcs->num_params; range++) {
-		for (limit = 0; limit < 2; limit++) {
-			spcs->ranges[range][limit] = ranges[range][limit];
-			printf("%f\t%f\t\t",spcs->ranges[range][limit],ranges[range][limit]);
-		}
-		printf("\n");
-	}
-/*	init_antecedents(
+	init_antecedents(
 		spcs->num_in,
 		spcs->num_out,
-		(int (*)[spcs->num_in])spcs->rules,
+		spcs->rules,
 		spcs->in_mfs);
 	param_range(
 		spcs->num_params,
-		(double (*)[2])spcs->ranges,
+		spcs->ranges,
 		spcs->num_in,
 		spcs->in_mfs,
 		spcs->num_out,
-		spcs->out_mfs);*/
-	printf("specs_set2: ");
-	ranges_print_test(spcs->num_params,spcs->ranges);
+		spcs->out_mfs);
+//	printf("specs_set2: ");
+//	ranges_print_test(spcs->num_params,spcs->ranges);
 
 	return spcs;
 }
@@ -213,55 +167,22 @@ specs_copy(struct Specs * oldspcs)
 	}
 
 	spcs->num_rule = oldspcs->num_rule;
-	spcs->rules = malloc(spcs->num_rule * sizeof(int *));
+	spcs->rules = malloc(spcs->num_rule * (spcs->num_in + spcs->num_out) * sizeof(int));
 	if (spcs->rules == NULL) {
 		free(spcs->out_mfs);
 		free(spcs->in_mfs);
 		free(spcs);
 		return NULL;
 	}
-	for (rule = 0; rule < spcs->num_rule; rule++) {
-		spcs->rules[rule] = malloc((spcs->num_in + spcs->num_out) * sizeof(int));
-		if (spcs->rules[rule] == NULL) {
-			for ( ; rule >= 0; rule--) {
-				free(spcs->rules[rule]);
-			}
-			free(spcs->rules);
-			free(spcs->out_mfs);
-			free(spcs->in_mfs);
-			free(spcs);
-			return NULL;
-		}
-	}
 
 	spcs->num_params = oldspcs->num_params;
-	spcs->ranges = malloc(spcs->num_params * sizeof(double *));
+	spcs->ranges = malloc(spcs->num_params * 2 * sizeof(double));
 	if (spcs->ranges == NULL) {
-		for (rule = 0; rule < spcs->num_rule; rule++) {
-			free(spcs->rules[rule]);
-		}
 		free(spcs->rules);
 		free(spcs->out_mfs);
 		free(spcs->in_mfs);
 		free(spcs);
 		return NULL;
-	}
-	for (range = 0; range < spcs->num_params; range++) {
-		spcs->ranges[range] = malloc(2 * sizeof(double));
-		if (spcs->ranges[range] == NULL) {
-			for ( ; range >= 0; range--) {
-				free(spcs->ranges[range]);
-			}
-			free(spcs->ranges);
-			for (rule = 0; rule < spcs->num_rule; rule++) {
-				free(spcs->rules[rule]);
-			}
-			free(spcs->rules);
-			free(spcs->out_mfs);
-			free(spcs->in_mfs);
-			free(spcs);
-			return NULL;
-		}
 	}
 
 	for (in = 0; in < spcs->num_in; in++) {
@@ -273,13 +194,13 @@ specs_copy(struct Specs * oldspcs)
 
 	for (rule = 0; rule < spcs->num_rule; rule++) {
 		for (ant = 0; ant < spcs->num_in; ant++) {
-			spcs->rules[rule][ant] = oldspcs->rules[rule][ant];
+			spcs->rules[rule * spcs->num_in + ant] = oldspcs->rules[rule * spcs->num_in + ant];
 		}
 	}
 
 	for (range = 0; range < spcs->num_params; range++) {
 		for (limit = 0; limit < 2; limit++) {
-			spcs->ranges[range][limit] = oldspcs->ranges[range][limit];
+			spcs->ranges[range * 2 + limit] = oldspcs->ranges[range * 2 + limit];
 		}
 	}
 
@@ -290,13 +211,7 @@ void
 specs_clear(struct Specs *spcs)
 {
 	int range, rule;
-	for (range = 0 ; range < spcs->num_params; range++) {
-		free(spcs->ranges[range]);
-	}
 	free(spcs->ranges);
-	for (rule = 0; rule < spcs->num_rule; rule++) {
-		free(spcs->rules[rule]);
-	}
 	free(spcs->rules);
 	free(spcs->out_mfs);
 	free(spcs->in_mfs);
@@ -465,40 +380,41 @@ rand_params(
 
 void
 init_antecedents(
-	int num_in,
-	int num_out,
-	int rules[][num_in + num_out],
-	int in_mfs[])
+    int num_in,
+    int num_out,
+    int *rules,
+    int in_mfs[])
 {
-	int in, rule;
-	unsigned int flag = 0;
-	int num_rule = 1;
-	//Initialize first rule to zeros and compute num_rule
-	for (in = 0; in < num_in; in++) {
-		rules[0][in] = 0;
-		num_rule *= in_mfs[in];
-	}
-	for (rule = 1; rule < num_rule; rule++) {
-		if (rules[rule-1][0] == (in_mfs[0] - 1)) {
-			rules[rule][0] = 0;
-			flag ^= (1 << 1);//Tell next element to increment
-		} else {
-			rules[rule][0] = rules[rule-1][0] + 1;
-		}
-		for (in = 1; in < num_in; in++) {
-			if (flag & (1 << in)) { //If this element's bit is set
-				if (rules[rule-1][in] == (in_mfs[in]-1)) { //And previous element is max
-					rules[rule][in] = 0; //Start back at zero
-					flag ^= (1 << (in + 1)); //Set next element's bit
-				} else {
-					rules[rule][in] = rules[rule-1][in] + 1;
-				}
-				flag ^= (1 << in);//Unset this element's bit regardless
-			} else {
-				rules[rule][in] = rules[rule-1][in];
-			}
-		}
-	}
+    int in, rule;
+    unsigned int flag = 0;
+    int num_rule = 1;
+    int width = num_in + num_out;
+    //Initialize first rule to zeros and compute num_rule
+    for (in = 0; in < num_in; in++) {
+        rules[0 + in] = 0;
+        num_rule *= in_mfs[in];
+    }
+    for (rule = 1; rule < num_rule; rule++) {
+        if (rules[(rule-1) * width + 0] == (in_mfs[0] - 1)) {
+            rules[rule * width + 0] = 0;
+            flag ^= (1 << 1);//Tell next element to increment
+        } else {
+            rules[rule * width + 0] = rules[(rule-1) * width + 0] + 1;
+        }
+        for (in = 1; in < num_in; in++) {
+            if (flag & (1 << in)) { //If this element's bit is set
+                if (rules[(rule-1) * width + in] == (in_mfs[in]-1)) { //And previous element is max
+                    rules[rule * width + in] = 0; //Start back at zero
+                    flag ^= (1 << (in + 1)); //Set next element's bit
+                } else {
+                    rules[rule * width + in] = rules[(rule-1) * width + in] + 1;
+                }
+                flag ^= (1 << in);//Unset this element's bit regardless
+            } else {
+                rules[rule * width + in] = rules[(rule-1) * width + in];
+            }
+        }
+    }
 }
 
 void
@@ -522,14 +438,15 @@ add_consequents(
 	int num_in,
 	int num_out,
 	int num_rule,
-	int rules[num_rule][num_in + num_out],
+	int *rules,
 	int consequents[num_rule * num_out])
 {
 	int out, rule;
 	int c = 0;
-	for (out = 0; out < num_out; out++) {
-		for (rule = 0; rule < num_rule; c++, rule++) {
-			rules[rule][num_in + out] = consequents[c];
+	int width = num_in + num_out;
+	for (rule = 0; rule < num_rule; c++, rule++) {
+		for (out = 0; out < num_out; out++) {
+			rules[rule * width + num_in + out] = consequents[c];
 		}
 	}
 }
@@ -652,7 +569,7 @@ individual_crossover(
 void
 param_range(
 	int num_params,
-	double ranges[num_params][2],
+	double ranges[num_params * 2],
 	int num_in,
 	int in_mfs[],
 	int num_out,
@@ -680,26 +597,26 @@ param_range(
 				| mfp == mfs[mf] * 3 - 1
 				| mfp == mfs[mf] * 3 - 2) {
 //				printf("mfp in [0,1,%d,%d]\n",mfs[mf]*3-2, mfs[mf]*3-1);
-				ranges[p][0] = -1;
-				ranges[p][1] = -1;
+				ranges[p * 2 + 0] = -1;
+				ranges[p * 2 + 1] = -1;
 			} else if (mfp == 3) {
-				ranges[p][0] = 0;
-				ranges[p][1] = I / 2;
+				ranges[p * 2 + 0] = 0;
+				ranges[p * 2 + 1] = I / 2;
 			} else if (mfp == (mfs[mf] * 3 - 4)) {
-				ranges[p][0] = 1 - I / 2;
-				ranges[p][1] = 1;
+				ranges[p * 2 + 0] = 1 - I / 2;
+				ranges[p * 2 + 1] = 1;
 			} else if ((mfp % 3) == 0) { //a_i
 //				printf("mfpMOD 3 is 0\n");
-				ranges[p][0] = ((mfp / 3) - 1) * I - I / 2;
-				ranges[p][1] = ((mfp / 3) - 1) * I + I / 2;
+				ranges[p * 2 + 0] = ((mfp / 3) - 1) * I - I / 2;
+				ranges[p * 2 + 1] = ((mfp / 3) - 1) * I + I / 2;
 			} else if ((mfp % 3) == 1) { //b_i
 //				printf("mfp MOD 3 is 1\n");
-				ranges[p][0] = (((mfp - 1) / 3)) * I - I / 2;
-				ranges[p][1] = (((mfp - 1) / 3)) * I + I / 2;
+				ranges[p * 2 + 0] = (((mfp - 1) / 3)) * I - I / 2;
+				ranges[p * 2 + 1] = (((mfp - 1) / 3)) * I + I / 2;
 			} else { //c_i
 //				printf("mfp MOD 3 is 2\n");
-				ranges[p][0] = (((mfp - 2) / 3) + 1) * I - I / 2;
-				ranges[p][1] = (((mfp - 2) / 3) + 1) * I + I / 2;
+				ranges[p * 2 + 0] = (((mfp - 2) / 3) + 1) * I - I / 2;
+				ranges[p * 2 + 1] = (((mfp - 2) / 3) + 1) * I + I / 2;
 			}
 		}
 	}
@@ -708,7 +625,7 @@ param_range(
 void
 r_mutation(
 	int num_params,
-	double ranges[num_params][2],
+	double ranges[num_params * 2],
 	double chromosome[num_params],
 	int num_genes)
 {
@@ -716,8 +633,8 @@ r_mutation(
 	for (i = 0; i < num_genes; i++) {
 		do {
 			p = rand_i(num_params);
-		} while (ranges[p][0] == -1);
-		chromosome[p] = ranges[p][0] + rand() * (ranges[p][1] - ranges[p][0]);
+		} while (ranges[p * 2] == -1);
+		chromosome[p] = ranges[p * 2] + rand() * (ranges[p * 2 + 1] - ranges[p * 2]);
 //		printf("r_mutation: range = [%f, %f]\n",ranges[p][0],ranges[p][1]);
 	}
 }
@@ -726,7 +643,7 @@ void
 rb_mutation(
 	int num_params,
 //	double ** ranges,
-	double ranges[num_params][2],
+	double ranges[num_params * 2],
 	double chromosome[num_params],
 	int cur_gen,
 	int max_gen,
@@ -741,12 +658,12 @@ rb_mutation(
 		r = drand48();
 		do {
 			p = rand_i(num_params);
-		} while (ranges[p][0] == -1);
+		} while (ranges[p * 2] == -1);
 		if (tau) {
-			del = (chromosome[p] - ranges[p][0]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
+			del = (chromosome[p] - ranges[p * 2]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
 			chromosome[p] -= del;
 		} else {
-			del = (ranges[p][1] - chromosome[p]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
+			del = (ranges[p * 2 + 1] - chromosome[p]) * (1 - r * (1 - pow((cur_gen / max_gen),b)));
 			chromosome[p] += del;
 		}
 	}
@@ -783,7 +700,7 @@ individual_mutate(
 	struct Individual *ind,
 	int num_params,
 //	double ** ranges,
-	double ranges[][2],
+	double ranges[num_params * 2],
 	int cur_gen,
 	int max_gen,
 	double b,
@@ -793,13 +710,13 @@ individual_mutate(
 	int num_genes)
 {
 //	ranges_print_test(num_params,ranges);
-	r_mutation(
+	rb_mutation(
 		num_params,
 		ranges,
 		ind->params,
-//		cur_gen,
-//		max_gen,
-//		b,
+		cur_gen,
+		max_gen,
+		b,
 		num_genes);
 	consequent_mutate(
 		num_rules,
@@ -821,7 +738,7 @@ population_init(
 	int out_mfs[],
 	int num_params,
 	int num_rules,
-	int rules[][num_in + num_out])
+	int rules[num_rules * (num_in + num_out)])
 {
 	int i;
 	double tmp_params[num_params];
@@ -875,7 +792,7 @@ population_iter(
 				individual_mutate(
 					pop_next[ind],
 					spcs->num_params,
-					(double (*)[2])spcs->ranges,
+					spcs->ranges,
 					cur_gen,
 					max_gen,
 					1.5,
@@ -886,7 +803,7 @@ population_iter(
 				individual_mutate(
 					pop_next[ind + 1],
 					spcs->num_params,
-					(double (*)[2])spcs->ranges,
+					spcs->ranges,
 					cur_gen,
 					max_gen,
 					1.5,
@@ -907,17 +824,24 @@ population_iter(
 				spcs->num_rule,
 				pop_next[ind]->consequents,
 				spcs->out_mfs);
-/*			rand_params(
-				pop_next[ind + 1]->params,
-				spcs->num_in,
-				spcs->in_mfs,
-				spcs->num_out,
-				spcs->out_mfs);
-			rand_consequents(
-				spcs->num_out,
-				spcs->num_rule,
-				pop_next[ind + 1]->consequents,
-				spcs->out_mfs);*/
 		}
 	}
 }
+
+struct Fis *
+individual_to_fis(
+	struct Individual * ind,
+	struct Specs * spcs)
+{
+	int rule, arg;
+	int rules[spcs->num_rule][spcs->num_in + spcs->num_out];
+
+	add_consequents(
+		spcs->num_in,
+		spcs->num_out,
+		spcs->num_rule,
+		spcs->rules,
+		ind->consequents)
+	for (rule = 0; rule < spcs->num_rule; rule++) {
+		for (arg = 0; arg < spcs->num_in + spcs->num_out; arg++) {
+			
