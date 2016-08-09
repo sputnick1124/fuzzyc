@@ -834,14 +834,27 @@ individual_to_fis(
 	struct Specs * spcs)
 {
 	int rule, arg;
-	int rules[spcs->num_rule][spcs->num_in + spcs->num_out];
-
+	int width = spcs->num_in + spcs->num_out;
+	int rules[spcs->num_rule][width];
 	add_consequents(
 		spcs->num_in,
 		spcs->num_out,
 		spcs->num_rule,
 		spcs->rules,
-		ind->consequents)
+		ind->consequents);
 	for (rule = 0; rule < spcs->num_rule; rule++) {
-		for (arg = 0; arg < spcs->num_in + spcs->num_out; arg++) {
-			
+		for (arg = 0; arg < width; arg++) {
+			rules[rule][arg] = spcs->rules[rule * width + arg];
+		}
+	}
+	struct Fis * fis = fis_create(
+		ind->params,
+		spcs->num_in,
+		spcs->num_out,
+		spcs->num_rule,
+		rules,
+		spcs->in_mfs,
+		spcs->out_mfs);
+
+	return fis;
+}
