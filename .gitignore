@@ -4,3 +4,14 @@ prof_output
 *.o
 *.so
 build*
+auto*
+ac.*
+depcomp
+missing
+compile
+install-sh
+INSTALL
+COPYING
+config.*
+*.scan
+build
