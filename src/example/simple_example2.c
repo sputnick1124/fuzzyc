@@ -48,6 +48,10 @@ double genfuzex(double x, double y) {
 int main(int argc, char *argv[]) {
 	double x, y, z;
 
+	if (argc < 2) {
+		printf("USAGE: %s <float> <float>\n",argv[0]);
+		exit(EXIT_FAILURE);
+	}
 	x = atof(argv[1]);
 	y = atof(argv[2]);
 

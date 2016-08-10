@@ -815,13 +815,10 @@ population_init(
 	int i;
 	double tmp_params[num_params];
 	int tmp_consequents[num_rules * num_out];
-	init_params(tmp_params, num_in, in_mfs, num_out, out_mfs);
+//	init_params(tmp_params, num_in, in_mfs, num_out, out_mfs);
 //	rand_consequents(num_out, num_rules, tmp_consequents, out_mfs);
-	tmp_consequents[0] = 0;
-	tmp_consequents[1] = 1;
-	tmp_consequents[2] = 2;
-	population[0] = individual_create(num_params, tmp_params, num_rules, tmp_consequents);
-	for (i = 1; i < pop_size; i++) {
+//	population[0] = individual_create(num_params, tmp_params, num_rules, tmp_consequents);
+	for (i = 0; i < pop_size; i++) {
 		rand_params(tmp_params, num_in, in_mfs, num_out, out_mfs);
 		rand_consequents(num_out, num_rules, tmp_consequents, out_mfs);
 		population[i] = individual_create(num_params, tmp_params, num_rules, tmp_consequents);
@@ -1017,6 +1014,7 @@ run_ga(
 			individuals_destroy(pop2, hp->pop_size);
 			free(pop1);
 			free(pop2);
+			printf("%d Generations\n",gen);
 			return ret_fis;
 		}
 		population_iter(pop1, pop2, rank, gen, hp, spcs);

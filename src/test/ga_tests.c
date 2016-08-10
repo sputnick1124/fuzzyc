@@ -95,7 +95,7 @@ int main(int argc, char * argv[]) {
 	int ind;
 	int in, test;
 	int fails = 0;
-	int test_num = 10;
+	int test_num = 1000000;
 
 	srand48((long int) time(NULL));
 	srand((long int) time(NULL));
@@ -346,7 +346,7 @@ int main(int argc, char * argv[]) {
 	double out[num_out];
 	double x[num_in];
 	for (in = 0; in < num_in; in++) {x[in] = drand48();}
-	for (test = 0; test < test_num; test++) {
+	for (test = 0; test < test_num / pop_size; test++) {
 		population_init(pop_size, population, num_in, in_mfs, num_out, out_mfs, num_params, num_rules, rules);
 		for (ind = 0; ind < pop_size; ind++) {
 			tmp_fis = individual_to_fis(population[ind],spcs);
