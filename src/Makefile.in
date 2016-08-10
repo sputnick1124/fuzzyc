@@ -175,7 +175,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = -O4 -Wall
+CFLAGS = -O4 -Wall -I../include -DDEBUG
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -258,6 +258,15 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = example test
+
+#fuzzy.o: fuzzy.c
+#	gcc $(CFLAGS) -o $@ -c $+
+
+#ga.o: ga.c fuzzy.o
+#	gcc $(CFLAGS) -o $@ -c $+
+fuzzy_SOURCES = fuzzy.c
+ga_SOURCES = fuzzy.c ga.c
+gnuplot_i_sources = gnuplot_i.c ../include/gnuplot_i.h
 all: all-recursive
 
 .SUFFIXES:
@@ -561,12 +570,6 @@ uninstall-am:
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am tags tags-am uninstall uninstall-am
 
-
-fuzzy.o: fuzzy.c
-	gcc $(CFLAGS) -o $@ -c $+
-
-ga.o: ga.c
-	gcc $(CFLAGS) -o $@ -c $+
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

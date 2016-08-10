@@ -114,6 +114,7 @@ void defuzzWeightedMV(double out[],
 			ht += firing_strengths[r];
 			hmv += firing_strengths[r] * (traps[r][o][2] + traps[r][o][1]) / 2;
 			#ifdef DEBUG
+			printf("num_rule = %d\n",num_rule);
 			printf("%f, %f, %f\n", firing_strengths[r], traps[r][o][1], traps[r][o][2]);
 			printf("defuzzWeightedMV: rule %d: out %d\nht = %f\nhmv = %f\n",
 				r, o, ht, hmv);
@@ -449,9 +450,8 @@ void get_fis(struct Rule ** rule_list,
 			ppoint += 3 * rules[rule][num_in + out];
 			for (pout = 0; pout < 3; pout++) {
 				#ifdef DEBUG
-//					printf("get_fis: OUTPUT: out = %d\n",out);
-//					printf("get_fis: OUTPUT: pout = %d\n",pout);
-					printf("get_fis: OUTPUT: ppoint = %d\n",ppoint);
+					printf("get_fis: OUTPUT:");
+					printf("out = %d, pout = %d, ppoint = %d\n",out, pout, ppoint);
 				#endif
 				output_list[out][pout] = params[ppoint];
 				ppoint += 1;

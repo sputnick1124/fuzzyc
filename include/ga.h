@@ -1,6 +1,8 @@
 #ifndef _GALIB_H_
 #define _GALIB_H_
 
+#include "fuzzy.h"
+
 struct Individual {
 	double * params;
 	int * consequents;
@@ -37,15 +39,30 @@ struct Specs *specs_set(
 	int num_in,
 	int in_mfs[],
 	int num_out,
-	int out_mfs[],
-	int rules[],
-	double ranges[]);
-
+	int out_mfs[]);
 struct Specs *specs_copy(struct Specs *spcs);
 
 void specs_clear(struct Specs *spcs);
 
+struct HyperParams
+{
+	int pop_size;
+	float elite;
+	float crossover;
+	float mutate;
+	int max_gen;
+};
+
+struct Fis *
+individual_to_fis(
+	struct Individual * ind,
+	struct Specs * spcs);
+
+typedef double (*fitness_fcn)(struct Fis * fis);
+
 int sum_i(int adds[], size_t len);
+
+double sum_d(double adds[], size_t len);
 
 int prod_i(int mults[], size_t len);
 
@@ -80,6 +97,14 @@ sp_crossover(
 	double parent2[]);
 
 void
+sp_c_crossover(
+	int num_params,
+	int child1[],
+	int child2[],
+	int parent1[],
+	int parent2[]);
+
+void
 tp_crossover(
 	int num_params,
 	double child1[],
@@ -88,7 +113,7 @@ tp_crossover(
 	double parent2[]);
 
 void
-consequent_crossover(
+tp_c_crossover(
 	int num_params,
 	int child1[],
 	int child2[],
@@ -178,13 +203,29 @@ void
 population_iter(
     struct Individual ** pop_now,
     struct Individual ** pop_next,
-    int pop_size,
     int rank[],
-    float elite,
-    float crossover,
-    float mutate,
     int cur_gen,
-    int max_gen,
+	struct HyperParams * hp,
     struct Specs * spcs);
+
+void
+population_switch(
+	struct Individual *** pop1,
+	struct Individual *** pop2);
+
+void
+population_rank(
+	int pop_size,
+	int rank[pop_size],
+	struct Individual ** population,
+	struct Specs * spcs,
+	double (*fitness_fcn)(struct Fis * fis),
+	double *fit_min);
+
+struct Fis *
+run_ga(
+    struct Specs * spcs,
+    struct HyperParams * hp,
+    fitness_fcn fit_fcn);
 
 #endif

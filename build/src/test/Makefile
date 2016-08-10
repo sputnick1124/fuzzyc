@@ -76,7 +76,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = ga_tests$(EXEEXT)
+bin_PROGRAMS = ga_tests$(EXEEXT) verify_fuzzy$(EXEEXT)
 subdir = src/test
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -91,9 +91,14 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_ga_tests_OBJECTS = ga_tests.$(OBJEXT) ../ga.$(OBJEXT)
+am_ga_tests_OBJECTS = ga_tests.$(OBJEXT) ../ga.$(OBJEXT) \
+	../fuzzy.$(OBJEXT)
 ga_tests_OBJECTS = $(am_ga_tests_OBJECTS)
 ga_tests_LDADD = $(LDADD)
+am_verify_fuzzy_OBJECTS = verify_fuzzy.$(OBJEXT) ../ga.$(OBJEXT) \
+	../fuzzy.$(OBJEXT) ../gnuplot_i.$(OBJEXT)
+verify_fuzzy_OBJECTS = $(am_verify_fuzzy_OBJECTS)
+verify_fuzzy_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -122,8 +127,8 @@ AM_V_CCLD = $(am__v_CCLD_$(V))
 am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(ga_tests_SOURCES)
-DIST_SOURCES = $(ga_tests_SOURCES)
+SOURCES = $(ga_tests_SOURCES) $(verify_fuzzy_SOURCES)
+DIST_SOURCES = $(ga_tests_SOURCES) $(verify_fuzzy_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -149,13 +154,13 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /usr/home/nick/fuzzyc/missing aclocal-1.14
+ACLOCAL = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing aclocal-1.14
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
-AUTOCONF = ${SHELL} /usr/home/nick/fuzzyc/missing autoconf
-AUTOHEADER = ${SHELL} /usr/home/nick/fuzzyc/missing autoheader
-AUTOMAKE = ${SHELL} /usr/home/nick/fuzzyc/missing automake-1.14
-AWK = nawk
+AUTOCONF = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoconf
+AUTOHEADER = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoheader
+AUTOMAKE = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing automake-1.14
+AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g
@@ -170,9 +175,9 @@ DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
-EGREP = /usr/bin/grep -E
+EGREP = /bin/grep -E
 EXEEXT = 
-GREP = /usr/bin/grep
+GREP = /bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -182,8 +187,8 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = -lm 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /usr/home/nick/fuzzyc/missing makeinfo
-MKDIR_P = ../../../install-sh -c -d
+MAKEINFO = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing makeinfo
+MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 PACKAGE = libfuzzy
 PACKAGE_BUGREPORT = stocktno@mail.uc.edu
@@ -194,13 +199,13 @@ PACKAGE_URL =
 PACKAGE_VERSION = 0.1
 PATH_SEPARATOR = :
 SET_MAKE = 
-SHELL = /bin/sh
+SHELL = /bin/bash
 STRIP = 
 VERSION = 0.1
-abs_builddir = /usr/home/nick/fuzzyc/build/src/test
-abs_srcdir = /usr/home/nick/fuzzyc/build/../src/test
-abs_top_builddir = /usr/home/nick/fuzzyc/build
-abs_top_srcdir = /usr/home/nick/fuzzyc/build/..
+abs_builddir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build/src/test
+abs_srcdir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build/../src/test
+abs_top_builddir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build
+abs_top_srcdir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build/..
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
@@ -220,7 +225,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /usr/home/nick/fuzzyc/install-sh
+install_sh = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -240,7 +245,8 @@ target_alias =
 top_build_prefix = ../../
 top_builddir = ../..
 top_srcdir = ../../..
-ga_tests_SOURCES = ga_tests.c ../ga.c
+ga_tests_SOURCES = ga_tests.c ../ga.c ../fuzzy.c
+verify_fuzzy_SOURCES = verify_fuzzy.c ../ga.c ../fuzzy.c ../gnuplot_i.c
 all: all-am
 
 .SUFFIXES:
@@ -324,10 +330,17 @@ clean-binPROGRAMS:
 	@$(MKDIR_P) ../$(DEPDIR)
 	@: > ../$(DEPDIR)/$(am__dirstamp)
 ../ga.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
+../fuzzy.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
 
 ga_tests$(EXEEXT): $(ga_tests_OBJECTS) $(ga_tests_DEPENDENCIES) $(EXTRA_ga_tests_DEPENDENCIES) 
 	@rm -f ga_tests$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ga_tests_OBJECTS) $(ga_tests_LDADD) $(LIBS)
+../gnuplot_i.$(OBJEXT): ../$(am__dirstamp) \
+	../$(DEPDIR)/$(am__dirstamp)
+
+verify_fuzzy$(EXEEXT): $(verify_fuzzy_OBJECTS) $(verify_fuzzy_DEPENDENCIES) $(EXTRA_verify_fuzzy_DEPENDENCIES) 
+	@rm -f verify_fuzzy$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(verify_fuzzy_OBJECTS) $(verify_fuzzy_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -336,8 +349,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ../$(DEPDIR)/fuzzy.Po
 include ../$(DEPDIR)/ga.Po
+include ../$(DEPDIR)/gnuplot_i.Po
 include ./$(DEPDIR)/ga_tests.Po
+include ./$(DEPDIR)/verify_fuzzy.Po
 
 .c.o:
 	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\

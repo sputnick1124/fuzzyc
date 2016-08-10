@@ -166,16 +166,16 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-ACLOCAL = ${SHELL} /usr/home/nick/fuzzyc/missing aclocal-1.14
+ACLOCAL = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing aclocal-1.14
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
-AUTOCONF = ${SHELL} /usr/home/nick/fuzzyc/missing autoconf
-AUTOHEADER = ${SHELL} /usr/home/nick/fuzzyc/missing autoheader
-AUTOMAKE = ${SHELL} /usr/home/nick/fuzzyc/missing automake-1.14
-AWK = nawk
+AUTOCONF = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoconf
+AUTOHEADER = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoheader
+AUTOMAKE = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing automake-1.14
+AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -O4 -Wall
+CFLAGS = -O4 -Wall -I../include -DDEBUG
 CPP = gcc -E
 CPPFLAGS = 
 CXX = g++
@@ -187,9 +187,9 @@ DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
-EGREP = /usr/bin/grep -E
+EGREP = /bin/grep -E
 EXEEXT = 
-GREP = /usr/bin/grep
+GREP = /bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -199,8 +199,8 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = -lm 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /usr/home/nick/fuzzyc/missing makeinfo
-MKDIR_P = ../../install-sh -c -d
+MAKEINFO = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing makeinfo
+MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 PACKAGE = libfuzzy
 PACKAGE_BUGREPORT = stocktno@mail.uc.edu
@@ -211,13 +211,13 @@ PACKAGE_URL =
 PACKAGE_VERSION = 0.1
 PATH_SEPARATOR = :
 SET_MAKE = 
-SHELL = /bin/sh
+SHELL = /bin/bash
 STRIP = 
 VERSION = 0.1
-abs_builddir = /usr/home/nick/fuzzyc/build/src
-abs_srcdir = /usr/home/nick/fuzzyc/build/../src
-abs_top_builddir = /usr/home/nick/fuzzyc/build
-abs_top_srcdir = /usr/home/nick/fuzzyc/build/..
+abs_builddir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build/src
+abs_srcdir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build/../src
+abs_top_builddir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build
+abs_top_srcdir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/build/..
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
@@ -237,7 +237,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /usr/home/nick/fuzzyc/install-sh
+install_sh = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -258,6 +258,15 @@ top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ../..
 SUBDIRS = example test
+
+#fuzzy.o: fuzzy.c
+#	gcc $(CFLAGS) -o $@ -c $+
+
+#ga.o: ga.c fuzzy.o
+#	gcc $(CFLAGS) -o $@ -c $+
+fuzzy_SOURCES = fuzzy.c
+ga_SOURCES = fuzzy.c ga.c
+gnuplot_i_sources = gnuplot_i.c ../include/gnuplot_i.h
 all: all-recursive
 
 .SUFFIXES:
@@ -561,12 +570,6 @@ uninstall-am:
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am tags tags-am uninstall uninstall-am
 
-
-fuzzy.o: fuzzy.c
-	gcc $(CFLAGS) -o $@ -c $+
-
-ga.o: ga.c
-	gcc $(CFLAGS) -o $@ -c $+
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

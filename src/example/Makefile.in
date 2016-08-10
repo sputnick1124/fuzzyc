@@ -76,7 +76,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = simple_example2$(EXEEXT)
+bin_PROGRAMS = simple_example2$(EXEEXT) ga_example$(EXEEXT)
 subdir = src/example
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -91,6 +91,10 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
+am_ga_example_OBJECTS = ga_example.$(OBJEXT) ../fuzzy.$(OBJEXT) \
+	../ga.$(OBJEXT) ../gnuplot_i.$(OBJEXT)
+ga_example_OBJECTS = $(am_ga_example_OBJECTS)
+ga_example_LDADD = $(LDADD)
 am_simple_example2_OBJECTS = simple_example2.$(OBJEXT) \
 	../fuzzy.$(OBJEXT)
 simple_example2_OBJECTS = $(am_simple_example2_OBJECTS)
@@ -123,8 +127,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(simple_example2_SOURCES)
-DIST_SOURCES = $(simple_example2_SOURCES)
+SOURCES = $(ga_example_SOURCES) $(simple_example2_SOURCES)
+DIST_SOURCES = $(ga_example_SOURCES) $(simple_example2_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -242,6 +246,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 simple_example2_SOURCES = simple_example2.c ../fuzzy.c
+ga_example_SOURCES = ga_example.c ../fuzzy.c ../ga.c ../gnuplot_i.c
 all: all-am
 
 .SUFFIXES:
@@ -325,6 +330,13 @@ clean-binPROGRAMS:
 	@$(MKDIR_P) ../$(DEPDIR)
 	@: > ../$(DEPDIR)/$(am__dirstamp)
 ../fuzzy.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
+../ga.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
+../gnuplot_i.$(OBJEXT): ../$(am__dirstamp) \
+	../$(DEPDIR)/$(am__dirstamp)
+
+ga_example$(EXEEXT): $(ga_example_OBJECTS) $(ga_example_DEPENDENCIES) $(EXTRA_ga_example_DEPENDENCIES) 
+	@rm -f ga_example$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(ga_example_OBJECTS) $(ga_example_LDADD) $(LIBS)
 
 simple_example2$(EXEEXT): $(simple_example2_OBJECTS) $(simple_example2_DEPENDENCIES) $(EXTRA_simple_example2_DEPENDENCIES) 
 	@rm -f simple_example2$(EXEEXT)
@@ -338,6 +350,9 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@../$(DEPDIR)/fuzzy.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../$(DEPDIR)/ga.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../$(DEPDIR)/gnuplot_i.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ga_example.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple_example2.Po@am__quote@
 
 .c.o:

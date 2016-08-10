@@ -67,4 +67,10 @@ void destroy_rules(struct Rule ** rules, int num_rule);
 
 void evalrules(double * out, double * x, struct Rule ** rules, int num_rule);
 
+void
+evalfis(
+	double * out,
+	double * x,
+	struct Fis * fis);
+
 #endif

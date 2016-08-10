@@ -6,6 +6,18 @@
 #include "../include/ga.h"
 #include "../include/fuzzy.h"
 
+int test_chromo_dbg(int num_params, double chromo[]) {
+    int p;
+    for (p = 2; p < num_params; p += 3) {
+        if (chromo[p-2] > chromo[p-1]) {
+            return 0;
+        } else if ( chromo[p-1] > chromo[p]) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+}
 
 void ranges_print_test(int num_params, double * ranges) {
     int p, limit;
@@ -34,6 +46,17 @@ int
 sum_i(int adds[], size_t len)
 {
 	int retval = 0;
+	int i;
+	for (i = 0; i < len; i++) {
+		retval += adds[i];
+	}
+	return retval;
+}
+
+double
+sum_d(double adds[], size_t len)
+{
+	double retval = 0;
 	int i;
 	for (i = 0; i < len; i++) {
 		retval += adds[i];
@@ -70,14 +93,26 @@ rand_tri_i(int max)
     return max - sqrt((1 - u) * max * max);
 }
 
+static int
+cmpdouble_p(const void *pp1, const void *pp2)
+{
+	double ** p1 = (double **)pp1;
+	double ** p2 = (double **)pp2;
+	if (**p1 > **p2) {
+	return 1;
+	} else if (**p1 < **p2) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
 struct Specs *
 specs_set(
 	int num_in,
     int in_mfs[],
     int num_out,
-    int out_mfs[],
-	int rules[],
-	double ranges[])
+    int out_mfs[])
 {
 	int in, out, rule, ant, range, limit;
 	struct Specs * spcs = malloc(sizeof(struct Specs));
@@ -429,7 +464,9 @@ rand_consequents(
 	for (out = 0; out < num_out; out++) {
 		for (rule = 0; rule < num_rule; c++, rule++) {
 			consequents[c] = rand_i(out_mfs[out]);
+//			printf("%d ",consequents[c]);
 		}
+//		printf("\n");
 	}
 }
 
@@ -471,6 +508,25 @@ sp_crossover(
 }
 
 void
+sp_c_crossover(
+	int num_params,
+	int child1[],
+	int child2[],
+	int parent1[],
+	int parent2[])
+{
+/* Single-point crossover*/
+	/*We definitely don't care about the first or last two params*/
+	int i = rand_i(num_params);
+	int p;
+	printf("%d\n",i);
+	for (p = 0; p < num_params; p++) {
+		child1[p] = (p <= i ? parent1[p] : parent2[p]);
+		child2[p] = (p <= i ? parent2[p] : parent1[p]);
+	}
+}
+
+void
 tp_crossover(
 	int num_params,
 	double child1[],
@@ -493,7 +549,7 @@ tp_crossover(
 }
 
 void
-consequent_crossover(
+tp_c_crossover(
 	int num_params,
 	int child1[],
 	int child2[],
@@ -501,17 +557,21 @@ consequent_crossover(
 	int parent2[])
 {
 /* Two-point crossover*/
-	int i = 2 + rand_i(num_params - 2);
-	int j = (i < num_params - 2 ? i + rand_i(num_params - 2 - i) : i);
+	int i = rand_i(num_params);
+	int j = (i < num_params ? i + rand_i(num_params - i) : i);
 	int p;
+//	printf("%d %d \n",i,j);
 	for (p = 0; p <= j; p++) {
 		child1[p] = (p <= i ? parent1[p] : parent2[p]);
 		child2[p] = (p <= i ? parent2[p] : parent1[p]);
+//		printf("|%d|%d",child1[p],child2[p]);
 	}
 	for (p = j; p < num_params; p++) {
 		child1[p] = parent1[p];
 		child2[p] = parent2[p];
+//		printf("|%d|%d",child1[p],child2[p]);
 	}
+//	printf("\n");
 }
 
 void
@@ -526,14 +586,24 @@ blx_a_crossover(
 	double I;
 	double x1, x2;
 	double xmin, xmax;
-	double alpha = 0.5;
+	double alpha = 0;
+	double lambda;
 	int p;
 	for (p = 0; p < num_params - 2; p++) {
 		xmin = fmin(parent1[p], parent2[p]);
 		xmax = fmax(parent1[p], parent2[p]);
 		I = xmax - xmin;
-		child1[p] = xmin - I * alpha + drand48() * I * 2 * alpha;
-		child2[p] = xmin - I * alpha + drand48() * I * 2 * alpha;
+		lambda = drand48();
+		child1[p] = lambda * (xmin - I * alpha) + (1 - lambda) * (xmax + alpha * I);
+		if (child1[p] < 0 | child1[p] > 1) {
+			printf("p1,p2,I,c1,L = [%0.4f,%0.4f,%0.4f,%0.4f,%0.4f] \n",parent1[p],parent2[p],I,child1[p],lambda);
+			exit(EXIT_FAILURE);
+		}
+		child2[p] = (1 - lambda) * (xmin - I * alpha) + lambda * (xmax + alpha * I);
+		if (child2[p] < 0 | child2[p] > 1) {
+			printf("p1,p2,I,c2,L = [%0.4f,%0.4f,%0.4f,%0.4f,%0.4f] \n",parent1[p],parent2[p],I,child1[p],lambda);
+			exit(EXIT_FAILURE);
+		}
 	}
 	child1[num_params-2] = parent1[num_params-2];
 	child1[num_params-1] = parent1[num_params-1];
@@ -557,7 +627,7 @@ individual_crossover(
 		c_ind2->params,
 		p_ind1->params,
 		p_ind2->params);
-	consequent_crossover(
+	tp_c_crossover(
 		num_rules * num_out,
 		c_ind1->consequents,
 		c_ind2->consequents,
@@ -688,9 +758,11 @@ consequent_mutate(
 				consequents[gen] += mut[tau];
 			} else {
 				consequents[gen] += 1;
+//				printf("UP\n");
 			}
 		} else {
 			consequents[gen] -= 1;
+//			printf("DOWN\n");
 		}
 	}
 }
@@ -743,8 +815,13 @@ population_init(
 	int i;
 	double tmp_params[num_params];
 	int tmp_consequents[num_rules * num_out];
-
-	for (i = 0; i < pop_size; i++) {
+	init_params(tmp_params, num_in, in_mfs, num_out, out_mfs);
+//	rand_consequents(num_out, num_rules, tmp_consequents, out_mfs);
+	tmp_consequents[0] = 0;
+	tmp_consequents[1] = 1;
+	tmp_consequents[2] = 2;
+	population[0] = individual_create(num_params, tmp_params, num_rules, tmp_consequents);
+	for (i = 1; i < pop_size; i++) {
 		rand_params(tmp_params, num_in, in_mfs, num_out, out_mfs);
 		rand_consequents(num_out, num_rules, tmp_consequents, out_mfs);
 		population[i] = individual_create(num_params, tmp_params, num_rules, tmp_consequents);
@@ -755,21 +832,19 @@ void
 population_iter(
 	struct Individual ** pop_now,
 	struct Individual ** pop_next,
-	int pop_size,
 	int rank[],
-	float elite,
-	float crossover,
-	float mutate,
 	int cur_gen,
-	int max_gen,
+	struct HyperParams * hp,
 	struct Specs * spcs)
 {
 	int ind, select1, select2;
-	int num_elite = pop_size * elite;
-	int num_cross = pop_size * crossover;
-	int num_mut = pop_size * mutate;
+	int pop_size = hp->pop_size;
+	int num_elite = pop_size * hp->elite;
+	int num_cross = pop_size * hp->crossover;
+	int num_mut = pop_size * hp->mutate;
 	int num_rand = pop_size - (num_elite + num_cross + num_mut);
 	for (ind = 0; ind < pop_size; ind++) {
+//		printf("%d\t",ind);
 		if (ind < num_elite) {
 			individual_copy(
 				pop_now[rank[ind]],
@@ -794,7 +869,7 @@ population_iter(
 					spcs->num_params,
 					spcs->ranges,
 					cur_gen,
-					max_gen,
+					hp->max_gen,
 					1.5,
 					spcs->num_rule,
 					spcs->num_out,
@@ -805,7 +880,7 @@ population_iter(
 					spcs->num_params,
 					spcs->ranges,
 					cur_gen,
-					max_gen,
+					hp->max_gen,
 					1.5,
 					spcs->num_rule,
 					spcs->num_out,
@@ -857,4 +932,99 @@ individual_to_fis(
 		spcs->out_mfs);
 
 	return fis;
+}
+
+void
+population_rank(
+	int pop_size,
+	int rank[pop_size],
+	struct Individual ** population,
+	struct Specs * spcs,
+	fitness_fcn fit_fcn,
+	double * fit_min)
+{
+	int ind;
+	double fitness[pop_size];
+	double * ranked_fitness[pop_size];
+	struct Fis * tmp_fis;
+
+	for (ind = 0; ind < pop_size; ind++) {
+		tmp_fis = individual_to_fis(population[ind],spcs);
+		fitness[ind] = fit_fcn(tmp_fis);
+		ranked_fitness[ind] = &fitness[ind];
+		fis_destroy(tmp_fis);
+	}
+	*fit_min = minimum(pop_size, fitness);
+	qsort(ranked_fitness, pop_size, sizeof(double *), cmpdouble_p);
+	for (ind = 0; ind < pop_size; ind++) {
+		rank[ind] = (int)(ranked_fitness[ind] - &fitness[0]);
+//		printf("%f\t%f\t%d\n",fitness[ind],*ranked_fitness[ind],rank[ind]);
+	}
+//	printf("\n");
+}
+
+void
+population_switch(
+	struct Individual *** pop1,
+	struct Individual *** pop2)
+{
+	struct Individual ** tmp = *pop1;
+	*pop1 = *pop2;
+	*pop2 = tmp;
+}
+
+struct Fis *
+run_ga(
+	struct Specs * spcs,
+	struct HyperParams * hp,
+	fitness_fcn fit_fcn)
+{
+	struct Individual ** pop1 = malloc(hp->pop_size * sizeof(struct Individual *));
+	struct Individual ** pop2 = malloc(hp->pop_size * sizeof(struct Individual *));
+	double fitness_hist[hp->max_gen];
+	int rank[hp->pop_size];
+	int gen;
+
+	population_init(
+		hp->pop_size,
+		pop1,
+		spcs->num_in,
+		spcs->in_mfs,
+		spcs->num_out,
+		spcs->out_mfs,
+		spcs->num_params,
+		spcs->num_rule,
+		spcs->rules);
+	population_init(
+		hp->pop_size,
+		pop2,
+		spcs->num_in,
+		spcs->in_mfs,
+		spcs->num_out,
+		spcs->out_mfs,
+		spcs->num_params,
+		spcs->num_rule,
+		spcs->rules);
+
+	for (gen = 0; gen < hp->max_gen; gen++) {
+		population_switch(&pop1, &pop2);
+//		printf("pop1 is at %p \t pop2 is at %p\n", pop1, pop2);
+		population_rank(hp->pop_size, rank, pop1, spcs, fit_fcn, &fitness_hist[gen]);
+		printf("Ind[%d] Fitness: %f\n",rank[0],fitness_hist[gen]);
+		if (gen >= 10 & fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) {
+			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
+			individuals_destroy(pop1, hp->pop_size);
+			individuals_destroy(pop2, hp->pop_size);
+			free(pop1);
+			free(pop2);
+			return ret_fis;
+		}
+		population_iter(pop1, pop2, rank, gen, hp, spcs);
+	}
+	struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
+	individuals_destroy(pop1, hp->pop_size);
+	individuals_destroy(pop2, hp->pop_size);
+	free(pop1);
+	free(pop2);
+	return ret_fis;
 }
