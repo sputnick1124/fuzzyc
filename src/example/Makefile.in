@@ -77,7 +77,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = simple_example2$(EXEEXT) ga_example$(EXEEXT) \
-	spring_mass_ode_control$(EXEEXT)
+	spring_mass_ode_control$(EXEEXT) f4_dynamics$(EXEEXT) \
+	f4_control$(EXEEXT)
 subdir = src/example
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -92,6 +93,14 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
+am_f4_control_OBJECTS = f4_control.$(OBJEXT) ../gnuplot_i.$(OBJEXT) \
+	../fuzzy.$(OBJEXT) ../ga.$(OBJEXT)
+f4_control_OBJECTS = $(am_f4_control_OBJECTS)
+f4_control_DEPENDENCIES =
+am_f4_dynamics_OBJECTS = f4_dynamics.$(OBJEXT) ../gnuplot_i.$(OBJEXT) \
+	../fuzzy.$(OBJEXT) ../ga.$(OBJEXT)
+f4_dynamics_OBJECTS = $(am_f4_dynamics_OBJECTS)
+f4_dynamics_DEPENDENCIES =
 am_ga_example_OBJECTS = ga_example.$(OBJEXT) ../fuzzy.$(OBJEXT) \
 	../ga.$(OBJEXT) ../gnuplot_i.$(OBJEXT)
 ga_example_OBJECTS = $(am_ga_example_OBJECTS)
@@ -134,9 +143,11 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(ga_example_SOURCES) $(simple_example2_SOURCES) \
+SOURCES = $(f4_control_SOURCES) $(f4_dynamics_SOURCES) \
+	$(ga_example_SOURCES) $(simple_example2_SOURCES) \
 	$(spring_mass_ode_control_SOURCES)
-DIST_SOURCES = $(ga_example_SOURCES) $(simple_example2_SOURCES) \
+DIST_SOURCES = $(f4_control_SOURCES) $(f4_dynamics_SOURCES) \
+	$(ga_example_SOURCES) $(simple_example2_SOURCES) \
 	$(spring_mass_ode_control_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -172,7 +183,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = -g
+CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -254,16 +265,15 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+AM_CFLAGS = -fopenmp -g -Wall
 simple_example2_SOURCES = simple_example2.c ../fuzzy.c
 ga_example_SOURCES = ga_example.c ../fuzzy.c ../ga.c ../gnuplot_i.c
 spring_mass_ode_control_SOURCES = spring_mass_ode_control.c ../gnuplot_i.c ../fuzzy.c ../ga.c
-
-#spring_mass_ode_control.o: spring_mass_ode_control.c ../fuzzy.c ../ga.c
-#	gcc -O4 -Wall -o spring_mass_ode_control.o -c spring_mass_ode_control.c 
-
-#spring_mass_ode_control: spring_mass_ode_control.o ../gnuplot_i.o
-#	gcc -o spring_mass_ode_control spring_mass_ode_control.o ../gnuplot_i.o ../fuzzy.o ../ga.o -lgsl -lcblas -latlas -lm
-spring_mass_ode_control_LDADD = -lgsl -lgslcblas -latlas -lm
+f4_dynamics_SOURCES = f4_dynamics.c ../gnuplot_i.c ../fuzzy.c ../ga.c
+f4_control_SOURCES = f4_control.c ../gnuplot_i.c ../fuzzy.c ../ga.c
+spring_mass_ode_control_LDADD = -lgsl -lgslcblas -latlas
+f4_dynamics_LDADD = -lgsl -lgslcblas -latlas
+f4_control_LDADD = -lgsl -lgslcblas -latlas
 all: all-am
 
 .SUFFIXES:
@@ -346,10 +356,18 @@ clean-binPROGRAMS:
 ../$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) ../$(DEPDIR)
 	@: > ../$(DEPDIR)/$(am__dirstamp)
-../fuzzy.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
-../ga.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
 ../gnuplot_i.$(OBJEXT): ../$(am__dirstamp) \
 	../$(DEPDIR)/$(am__dirstamp)
+../fuzzy.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
+../ga.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
+
+f4_control$(EXEEXT): $(f4_control_OBJECTS) $(f4_control_DEPENDENCIES) $(EXTRA_f4_control_DEPENDENCIES) 
+	@rm -f f4_control$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(f4_control_OBJECTS) $(f4_control_LDADD) $(LIBS)
+
+f4_dynamics$(EXEEXT): $(f4_dynamics_OBJECTS) $(f4_dynamics_DEPENDENCIES) $(EXTRA_f4_dynamics_DEPENDENCIES) 
+	@rm -f f4_dynamics$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(f4_dynamics_OBJECTS) $(f4_dynamics_LDADD) $(LIBS)
 
 ga_example$(EXEEXT): $(ga_example_OBJECTS) $(ga_example_DEPENDENCIES) $(EXTRA_ga_example_DEPENDENCIES) 
 	@rm -f ga_example$(EXEEXT)
@@ -373,6 +391,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../$(DEPDIR)/fuzzy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../$(DEPDIR)/ga.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../$(DEPDIR)/gnuplot_i.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/f4_control.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/f4_dynamics.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ga_example.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple_example2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/spring_mass_ode_control.Po@am__quote@

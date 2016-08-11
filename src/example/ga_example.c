@@ -82,11 +82,11 @@ main(void)
 	struct Specs * spcs = specs_set(num_in, in_mfs, num_out, out_mfs);
 	struct HyperParams * hp = malloc(sizeof(struct HyperParams));
 
-	hp->pop_size = 50;
+	hp->pop_size = 100;
 	hp->elite = 0.05;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 10;
+	hp->max_gen = 500;
 
 	struct Fis * bestfis = run_ga(spcs, hp, fit_line);
 

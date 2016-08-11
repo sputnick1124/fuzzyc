@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <math.h>
 #include <time.h>
+#include <omp.h>
 #include "../include/ga.h"
 #include "../include/fuzzy.h"
 
@@ -915,7 +916,8 @@ population_rank(
 	double fitness[pop_size];
 	double * ranked_fitness[pop_size];
 	struct Fis * tmp_fis;
-
+#pragma omp parallel private(tmp_fis) shared(fitness, ranked_fitness)
+#pragma omp for
 	for (ind = 0; ind < pop_size; ind++) {
 		tmp_fis = individual_to_fis(population[ind],spcs);
 		fitness[ind] = fit_fcn(tmp_fis);

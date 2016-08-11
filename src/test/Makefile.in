@@ -163,7 +163,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = -g
+CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -245,6 +245,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+AM_CFLAGS = -fopenmp -Wall -g
 ga_tests_SOURCES = ga_tests.c ../ga.c ../fuzzy.c
 verify_fuzzy_SOURCES = verify_fuzzy.c ../ga.c ../fuzzy.c ../gnuplot_i.c
 all: all-am

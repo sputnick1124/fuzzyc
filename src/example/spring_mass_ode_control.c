@@ -56,6 +56,7 @@ spring_fitness(struct Fis * fis)
 		cost += fabs(y[0]) + fabs(y[1]);
 	}
 	gsl_odeiv2_driver_free (d);
+	free(u);
 	return cost;
 }
 
@@ -106,7 +107,7 @@ plot_fis_control(struct Fis * fis)
 
 	printf("Press any key to exit program\n");
 	getchar();
-
+	free(u);
 	gnuplot_close(h1);
 
 }
@@ -132,5 +133,8 @@ int main(int argc, char *argv[]) {
 
 	plot_fis_control(bestfis);
 
+	fis_destroy(bestfis);
+	specs_clear(spcs);
+	free(hp);
 	return 0;
 }

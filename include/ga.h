@@ -40,6 +40,7 @@ struct Specs *specs_set(
 	int in_mfs[],
 	int num_out,
 	int out_mfs[]);
+
 struct Specs *specs_copy(struct Specs *spcs);
 
 void specs_clear(struct Specs *spcs);
@@ -52,6 +53,9 @@ struct HyperParams
 	float mutate;
 	int max_gen;
 };
+
+struct HyperParams *
+set_default_hp()
 
 struct Fis *
 individual_to_fis(
