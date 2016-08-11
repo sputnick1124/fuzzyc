@@ -79,7 +79,7 @@ plot_fis_control(struct Fis * fis)
 	double t, t1;
 	double y[2];
 	double tt[1000], y0[1000], y1[1000];
-
+	tt[0] = 0; y0[0] = 0; y1[0] = 0;
 	for (j = 0; j < 2; j++) {
 		y[0] = 0.2; y[1] = 0.0;
 		t = 0.0; t1 = 100.0;
@@ -124,10 +124,10 @@ int main(int argc, char *argv[]) {
 	struct HyperParams * hp = malloc(sizeof(struct HyperParams));
 
 	hp->pop_size = 100;
-	hp->elite = 0.05;
+	hp->elite = 0.1;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 200;
+	hp->max_gen = 20;
 
 	struct Fis * bestfis = run_ga(spcs, hp, spring_fitness);
 

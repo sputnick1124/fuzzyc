@@ -55,7 +55,7 @@ struct HyperParams
 };
 
 struct HyperParams *
-set_default_hp()
+set_default_hp();
 
 struct Fis *
 individual_to_fis(

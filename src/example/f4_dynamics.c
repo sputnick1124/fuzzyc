@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
 	ep[0] = 1; ei[0] = 0; ed[0] = 0;
 
 	tt[0] = 0; y0[0] = 0;
+	u[0] = 0;
 
 	for (i = 1; i < nsteps; i++) {
 		double ti = i * t1 / nsteps;
@@ -68,6 +69,7 @@ int main(int argc, char *argv[]) {
 		ei[i] = ei[i - 1] + (t1 / nsteps) * ep[i];
 		ed[i] = (ep[i] - ep[i - 1]) / (t1 / nsteps);
 		u[0] = kp*ep[i] + ki*ei[i] + kd*ed[i];
+//		u[0] = 1;
 	}
 	printf("min(ep) = %f\nmax(ep) = %f\n",minimum(nsteps,ep),maximum(nsteps,ep));
 	printf("min(ei) = %f\nmax(ei) = %f\n",minimum(nsteps,ei),maximum(nsteps,ei));

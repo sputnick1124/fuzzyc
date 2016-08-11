@@ -66,21 +66,21 @@ fit_line(struct Fis * fis)
 	double dx = 0.01;
 	int max = (int) (1.0 / dx);
 	double x[1];
-	double out[1];
+	double out[2];
 	double cost = 0;
 	for (i = 0; i < max; i++) {
 		x[0] = (double)i * dx;
 		evalfis(out,x,fis);
-		cost += dx * (out[0] - (double)i) * (out[0] - (double)i);
+		cost += (out[0] - dx * (double)i) * (out[1] - dx * (double)i);
 	}
 	return cost;
 }
 
 int main(int argc, char * argv[]) {
 	int num_in = 3;
-	int in_mfs[] = {3, 4, 2};
-	int num_out = 1;
-	int out_mfs[] = {3};
+	int in_mfs[] = {3, 3, 3};
+	int num_out = 3;
+	int out_mfs[] = {5, 5, 5};
 	int num_params = 3 * (sum_i(in_mfs, num_in) + sum_i(out_mfs,num_out));
 	int num_rules = prod_i(in_mfs,num_in);
 	int rules[num_rules * (num_in + num_out)];
@@ -96,7 +96,7 @@ int main(int argc, char * argv[]) {
 	int ind;
 	int in, test;
 	int fails = 0;
-	int test_num = 1000000;
+	int test_num = 1000;
 
 	srand48((long int) time(NULL));
 	srand((long int) time(NULL));
@@ -369,9 +369,9 @@ int main(int argc, char * argv[]) {
 	individuals_destroy(tmp_pop, pop_size);
 
 	int imf[1] = {3};
-	int omf[1] = {3};
+	int omf[2] = {3,3};
 
-	spcs = specs_set(1,imf,1,omf);
+	spcs = specs_set(1,imf,2,omf);
 //	hp->max_gen = 5;
 	struct Fis * bestfis = run_ga(spcs,hp,fit_line);
 
@@ -379,13 +379,13 @@ int main(int argc, char * argv[]) {
 	free(hp);
 
 	double xx;
-	double x_vals[1], out_vals[1];
+	double x_vals[1], out_vals[2];
 	int c = 0;
 	for (xx = 0.0; xx < 1.01; c++, xx += 0.01) {
 		x_vals[0] = xx;
 		evalfis(out_vals,x_vals,bestfis);
 //		y[c] = out_vals[0];
-		printf("%f\n",out_vals[0]);
+		printf("%f\t%f\n",out_vals[0], out_vals[1]);
 	}
 
 //	chromosome_print(18,bestfis->params);

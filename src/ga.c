@@ -915,22 +915,28 @@ population_rank(
 	int ind;
 	double fitness[pop_size];
 	double * ranked_fitness[pop_size];
+	double tmp_fit;
 	struct Fis * tmp_fis;
-#pragma omp parallel private(tmp_fis) shared(fitness, ranked_fitness)
-#pragma omp for
-	for (ind = 0; ind < pop_size; ind++) {
-		tmp_fis = individual_to_fis(population[ind],spcs);
-		fitness[ind] = fit_fcn(tmp_fis);
-		ranked_fitness[ind] = &fitness[ind];
-		fis_destroy(tmp_fis);
-	}
+	// Parallelize
+//	#pragma omp parallel private(tmp_fis)
+	{
+//		#pragma omp for
+		for (ind = 0; ind < pop_size; ind++) {
+			tmp_fis = individual_to_fis(population[ind],spcs);
+			tmp_fit = fit_fcn(tmp_fis);
+//			#pragma omp critical
+			{
+			fitness[ind] = tmp_fit;
+			ranked_fitness[ind] = &fitness[ind];
+			}
+			fis_destroy(tmp_fis);
+		}
+	} //end omp
 	*fit_min = minimum(pop_size, fitness);
 	qsort(ranked_fitness, pop_size, sizeof(double *), cmpdouble_p);
 	for (ind = 0; ind < pop_size; ind++) {
 		rank[ind] = (int)(ranked_fitness[ind] - &fitness[0]);
-//		printf("%f\t%f\t%d\n",fitness[ind],*ranked_fitness[ind],rank[ind]);
 	}
-//	printf("\n");
 }
 
 void
@@ -954,7 +960,6 @@ run_ga(
 	double fitness_hist[hp->max_gen];
 	int rank[hp->pop_size];
 	int gen;
-
 	population_init(
 		hp->pop_size,
 		pop1,
@@ -977,11 +982,10 @@ run_ga(
 		spcs->rules);
 
 	for (gen = 0; gen < hp->max_gen; gen++) {
-		population_switch(&pop1, &pop2);
 //		printf("pop1 is at %p \t pop2 is at %p\n", pop1, pop2);
 		population_rank(hp->pop_size, rank, pop1, spcs, fit_fcn, &fitness_hist[gen]);
 		printf("Ind[%d] Fitness: %f\n",rank[0],fitness_hist[gen]);
-		if ( (gen >= 10) & (fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) ) {
+		if ( (gen > 10) && (fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) ) {
 			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
 			individuals_destroy(pop1, hp->pop_size);
 			individuals_destroy(pop2, hp->pop_size);
@@ -989,8 +993,9 @@ run_ga(
 			free(pop2);
 			printf("%d Generations\n",gen);
 			return ret_fis;
-		}
+		} else {}
 		population_iter(pop1, pop2, rank, gen, hp, spcs);
+		population_switch(&pop1, &pop2);
 	}
 	struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
 	individuals_destroy(pop1, hp->pop_size);
