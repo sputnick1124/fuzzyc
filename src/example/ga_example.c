@@ -32,7 +32,6 @@ fit_line(struct Fis * fis)
 	double y[max], y_a[max];
     double x[1];
     double out[1];
-    double cost = 0;
     for (i = 0; i < max; i++) {
         x[0] = (double)i * dx;
 //        x[1] = (double)i * dx;
@@ -70,7 +69,7 @@ plot_line(struct Fis * fis)
 	gnuplot_close(h1);
 }
 
-
+  
 int
 main(void)
 {
@@ -78,16 +77,16 @@ main(void)
 	srand48(rand());
 	int num_in = 1;
 	int num_out = 1;
-	int in_mfs[1] = {3};
-	int out_mfs[1] = {3};
+	int in_mfs[1] = {5};
+	int out_mfs[1] = {5};
 	struct Specs * spcs = specs_set(num_in, in_mfs, num_out, out_mfs);
 	struct HyperParams * hp = malloc(sizeof(struct HyperParams));
 
-	hp->pop_size = 100;
+	hp->pop_size = 50;
 	hp->elite = 0.05;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 500;
+	hp->max_gen = 10;
 
 	struct Fis * bestfis = run_ga(spcs, hp, fit_line);
 

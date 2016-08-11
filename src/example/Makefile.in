@@ -76,7 +76,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = simple_example2$(EXEEXT) ga_example$(EXEEXT)
+bin_PROGRAMS = simple_example2$(EXEEXT) ga_example$(EXEEXT) \
+	spring_mass_ode_control$(EXEEXT)
 subdir = src/example
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -99,6 +100,12 @@ am_simple_example2_OBJECTS = simple_example2.$(OBJEXT) \
 	../fuzzy.$(OBJEXT)
 simple_example2_OBJECTS = $(am_simple_example2_OBJECTS)
 simple_example2_LDADD = $(LDADD)
+am_spring_mass_ode_control_OBJECTS =  \
+	spring_mass_ode_control.$(OBJEXT) ../gnuplot_i.$(OBJEXT) \
+	../fuzzy.$(OBJEXT) ../ga.$(OBJEXT)
+spring_mass_ode_control_OBJECTS =  \
+	$(am_spring_mass_ode_control_OBJECTS)
+spring_mass_ode_control_DEPENDENCIES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -127,8 +134,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(ga_example_SOURCES) $(simple_example2_SOURCES)
-DIST_SOURCES = $(ga_example_SOURCES) $(simple_example2_SOURCES)
+SOURCES = $(ga_example_SOURCES) $(simple_example2_SOURCES) \
+	$(spring_mass_ode_control_SOURCES)
+DIST_SOURCES = $(ga_example_SOURCES) $(simple_example2_SOURCES) \
+	$(spring_mass_ode_control_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -163,12 +172,6 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-
-#spring_mass_ode_solver.o: spring_mass_ode_solver.c
-#	gcc -O4 -Wall -o spring_mass_ode_solver.o -c spring_mass_ode_solver.c 
-
-#spring_mass_ode_solver: spring_mass_ode_solver.o ../gnuplot_i.o
-#	gcc -o spring_mass_ode_solver spring_mass_ode_solver.o ../gnuplot_i.o -lgsl -lcblas -latlas -lm
 CFLAGS = -g
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
@@ -253,7 +256,14 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 simple_example2_SOURCES = simple_example2.c ../fuzzy.c
 ga_example_SOURCES = ga_example.c ../fuzzy.c ../ga.c ../gnuplot_i.c
-spring_mass_ode_solver_SOURCES = spring_mass_ode_solver.c ../gnuplot_i.c
+spring_mass_ode_control_SOURCES = spring_mass_ode_control.c ../gnuplot_i.c ../fuzzy.c ../ga.c
+
+#spring_mass_ode_control.o: spring_mass_ode_control.c ../fuzzy.c ../ga.c
+#	gcc -O4 -Wall -o spring_mass_ode_control.o -c spring_mass_ode_control.c 
+
+#spring_mass_ode_control: spring_mass_ode_control.o ../gnuplot_i.o
+#	gcc -o spring_mass_ode_control spring_mass_ode_control.o ../gnuplot_i.o ../fuzzy.o ../ga.o -lgsl -lcblas -latlas -lm
+spring_mass_ode_control_LDADD = -lgsl -lgslcblas -latlas -lm
 all: all-am
 
 .SUFFIXES:
@@ -349,6 +359,10 @@ simple_example2$(EXEEXT): $(simple_example2_OBJECTS) $(simple_example2_DEPENDENC
 	@rm -f simple_example2$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(simple_example2_OBJECTS) $(simple_example2_LDADD) $(LIBS)
 
+spring_mass_ode_control$(EXEEXT): $(spring_mass_ode_control_OBJECTS) $(spring_mass_ode_control_DEPENDENCIES) $(EXTRA_spring_mass_ode_control_DEPENDENCIES) 
+	@rm -f spring_mass_ode_control$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(spring_mass_ode_control_OBJECTS) $(spring_mass_ode_control_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f ../*.$(OBJEXT)
@@ -361,6 +375,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../$(DEPDIR)/gnuplot_i.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ga_example.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple_example2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/spring_mass_ode_control.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\

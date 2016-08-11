@@ -59,6 +59,9 @@ struct Fis * fis_create(
 	int in_mfs[],
 	int out_mfs[]);
 
+void
+fis_destroy(struct Fis * fis);
+
 void print_rule(struct Rule * rule);
 
 void destroy_rule(struct Rule * rule);

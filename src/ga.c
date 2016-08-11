@@ -6,30 +6,6 @@
 #include "../include/ga.h"
 #include "../include/fuzzy.h"
 
-int test_chromo_dbg(int num_params, double chromo[]) {
-    int p;
-    for (p = 2; p < num_params; p += 3) {
-        if (chromo[p-2] > chromo[p-1]) {
-            return 0;
-        } else if ( chromo[p-1] > chromo[p]) {
-            return 0;
-        } else {
-            return 1;
-        }
-    }
-}
-
-void ranges_print_test(int num_params, double * ranges) {
-    int p, limit;
-	for (p = 0; p < num_params; p++) {
-		printf("%d: ",p);
-		for (limit = 0; limit < 2; limit++) {
-	        printf("%0.3f\t", ranges[p * 2 + limit]);
-		}
-		printf("\n");
-    }
-}
-
 /** Some utility functions to take care of the mechanics **/
 int
 prod_i(int mults[], size_t len)
@@ -86,7 +62,6 @@ rand_tri_i(int max)
 	/* return integer in the range [0, max) from a triangular distribution
 	with a,c = 0, and b = max
 	see https://en.wikipedia.org/wiki/Triangular_distribution*/
-    int retval;
     double u = drand48();
 
 	/* implicit cast to int is intentional*/
@@ -114,7 +89,7 @@ specs_set(
     int num_out,
     int out_mfs[])
 {
-	int in, out, rule, ant, range, limit;
+	int in, out;
 	struct Specs * spcs = malloc(sizeof(struct Specs));
 	assert(spcs != NULL);
 
@@ -245,7 +220,6 @@ specs_copy(struct Specs * oldspcs)
 void
 specs_clear(struct Specs *spcs)
 {
-	int range, rule;
 	free(spcs->ranges);
 	free(spcs->rules);
 	free(spcs->out_mfs);
@@ -344,7 +318,6 @@ rand_partition(double params[], int num_sets)
 {
 	int p;
 	double r;
-	double tmp;
 	int num_params = num_sets * 3;
 	params[0] = 0; params[1] = 0; //Set lower bounds
 	params[num_params-1] = 1;	//Set upper bounds
@@ -584,7 +557,6 @@ blx_a_crossover(
 {
 /* Blended crossover with alpha exploration factor*/
 	double I;
-	double x1, x2;
 	double xmin, xmax;
 	double alpha = 0;
 	double lambda;
@@ -595,12 +567,12 @@ blx_a_crossover(
 		I = xmax - xmin;
 		lambda = drand48();
 		child1[p] = lambda * (xmin - I * alpha) + (1 - lambda) * (xmax + alpha * I);
-		if (child1[p] < 0 | child1[p] > 1) {
+		if ((child1[p] < 0) | (child1[p] > 1)) {
 			printf("p1,p2,I,c1,L = [%0.4f,%0.4f,%0.4f,%0.4f,%0.4f] \n",parent1[p],parent2[p],I,child1[p],lambda);
 			exit(EXIT_FAILURE);
 		}
 		child2[p] = (1 - lambda) * (xmin - I * alpha) + lambda * (xmax + alpha * I);
-		if (child2[p] < 0 | child2[p] > 1) {
+		if ((child2[p] < 0) | (child2[p] > 1)) {
 			printf("p1,p2,I,c2,L = [%0.4f,%0.4f,%0.4f,%0.4f,%0.4f] \n",parent1[p],parent2[p],I,child1[p],lambda);
 			exit(EXIT_FAILURE);
 		}
@@ -663,9 +635,9 @@ param_range(
 		I = 1 / ((double) mfs[mf] - 1);
 		for (mfp = 0 ; mfp < mfs[mf] * 3; mfp++, p++) {
 //			printf("%d\t%d\t%d\t%d\t%d\t%d\n",p,mfp, mfp%3, mfp%3==1, mf, mfs[mf]*3);
-			if (mfp == 0 | mfp == 1
-				| mfp == mfs[mf] * 3 - 1
-				| mfp == mfs[mf] * 3 - 2) {
+			if ((mfp == 0) | (mfp == 1)
+				| (mfp == mfs[mf] * 3 - 1)
+				| (mfp == mfs[mf] * 3 - 2)) {
 //				printf("mfp in [0,1,%d,%d]\n",mfs[mf]*3-2, mfs[mf]*3-1);
 				ranges[p * 2 + 0] = -1;
 				ranges[p * 2 + 1] = -1;
@@ -747,7 +719,7 @@ consequent_mutate(
 	int out_mfs[],
 	int num_genes)
 {
-	int con, out, gen, mf, i;
+	int gen, mf, i;
 	int mut[] = {-1, 1};
 	int tau = rand_i(2);
 	for (i = 0; i < num_genes; i++) {
@@ -839,7 +811,6 @@ population_iter(
 	int num_elite = pop_size * hp->elite;
 	int num_cross = pop_size * hp->crossover;
 	int num_mut = pop_size * hp->mutate;
-	int num_rand = pop_size - (num_elite + num_cross + num_mut);
 	for (ind = 0; ind < pop_size; ind++) {
 //		printf("%d\t",ind);
 		if (ind < num_elite) {
@@ -1008,7 +979,7 @@ run_ga(
 //		printf("pop1 is at %p \t pop2 is at %p\n", pop1, pop2);
 		population_rank(hp->pop_size, rank, pop1, spcs, fit_fcn, &fitness_hist[gen]);
 		printf("Ind[%d] Fitness: %f\n",rank[0],fitness_hist[gen]);
-		if (gen >= 10 & fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) {
+		if ( (gen >= 10) & (fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) ) {
 			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
 			individuals_destroy(pop1, hp->pop_size);
 			individuals_destroy(pop2, hp->pop_size);

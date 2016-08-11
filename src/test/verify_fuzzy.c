@@ -33,7 +33,6 @@ fit_line(struct Fis * fis)
     double y[max], y_a[max];
     double x[1];
     double out[1];
-    double cost = 0;
     for (i = 0; i < max; i++) {
         x[0] = (double)i * dx;
 //        x[1] = (double)i * dx;
@@ -81,7 +80,6 @@ int main(void)
 	int out_mfs[1] = {3};
 
 	int num_rule = prod_i(in_mfs, num_in);
-	int rules[num_rule * (num_in + num_out)];
 	int consequents[num_rule * num_out];
 
 	int num_params = 3 * (sum_i(in_mfs,num_in) + sum_i(out_mfs,num_out));

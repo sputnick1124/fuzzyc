@@ -16,6 +16,7 @@ int test_chromo(int num_params, double chromo[]) {
 			return 1;
 		}
 	}
+	return 1;
 }
 
 int test_consequents(int num_out, int num_rule, int consequents[], int out_mfs[]) {
@@ -352,7 +353,7 @@ int main(int argc, char * argv[]) {
 			tmp_fis = individual_to_fis(population[ind],spcs);
 			evalfis(out, x, tmp_fis);
 			for (o = 0; o < num_out; o++) {
-				if (!isfinite(out[o]) | out[o] < 0 | out[o] > 1) {
+				if ((!isfinite(out[o])) | (out[o] < 0) | (out[o] > 1)) {
 					fails++;
 					printf("test: %d, ind: %d, out[%d] = %f\n",test,ind,o,out[o]);
 				}
@@ -379,7 +380,6 @@ int main(int argc, char * argv[]) {
 
 	double xx;
 	double x_vals[1], out_vals[1];
-	double y[100];
 	int c = 0;
 	for (xx = 0.0; xx < 1.01; c++, xx += 0.01) {
 		x_vals[0] = xx;
