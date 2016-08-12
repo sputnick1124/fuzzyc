@@ -62,7 +62,11 @@ struct Fis * fis_create(
 void
 fis_destroy(struct Fis * fis);
 
-void print_rule(struct Rule * rule);
+void
+fis_print(struct Fis * fis,
+	FILE * fd);
+
+void print_rule(struct Rule * rule, FILE * fd);
 
 void destroy_rule(struct Rule * rule);
 

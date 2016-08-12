@@ -12,20 +12,23 @@
 #include "../../include/ga.h"
 #include "../../include/gnuplot_i.h"
 
-static const int nsteps = 10000;
-static const double t1 = 20.0;
+static const int nsteps = 1000;
+static const double t1 = 10.0;
 
-double stepinfo(int nsteps, double t[nsteps], double x[nsteps]) {
+double stepinfo(int nsteps, double t[nsteps], double x[nsteps], int flag) {
 	double max = 0;
 	double ts = 0;
 	int i;
 	for (i = 0; i < nsteps; i++) {
 		max = (x[i] > max ? x[i] : max);
-		ts = (fabs(x[i] - 1) > 0.02 ? t[i] : ts);
+		ts = (fabs(x[i] - 1.0) > 0.02 ? t[i] : ts);
+		if (flag) {
+			printf("t=%0.2f\tx(t) = %0.4f\tfabs(x(t)-1)=%0.4f\tts=%0.2f\n",t[i], x[i], fabs(x[i] - 1.0), ts);
+		} else {}
 	}
-	double os = (max - 1) * 100;
+	double os = (max > 1 ? max - 1 : 0);
 	if (max > 1000) {return 101.0;}
-	return ts;
+	return ts + os;
 }
 
 int f4_dyn(double t, const double y[], double f[],
@@ -44,6 +47,107 @@ int f4_dyn(double t, const double y[], double f[],
 	return GSL_SUCCESS;
 }
 
+int f4_deg_dyn(double t, const double y[], double f[],
+					void *params) {
+	(void)(t);
+	double * u = *(double **)params;
+	f[0] = -10.719861231569817 * y[0] -
+			-7.528187337380746 * y[1] -
+			-3.229835212489159 * y[2] -
+			-0.160104076322637 * y[3] -
+			-0.069384215091067 * y[4] + u[0];
+	f[1] = y[0];
+	f[2] = y[1];
+	f[3] = y[2];
+	f[4] = y[3];
+	return GSL_SUCCESS;
+}
+
+int f4_sub_dyn(double t, const double y[], double f[],
+					void *params) {
+	(void)(t);
+	double * u = *(double **)params;
+	f[0] = -11.262534184138559 * y[0] -
+			-20.738377392889699 * y[1] -
+			-81.061987237921599 * y[2] -
+			  0.069724247948952 * y[3] -
+			  0.130013673655424 * y[4] + u[0];
+	f[1] = y[0];
+	f[2] = y[1];
+	f[3] = y[2];
+	f[4] = y[3];
+	return GSL_SUCCESS;
+}
+
+int f4_sup_dyn(double t, const double y[], double f[],
+					void *params) {
+	(void)(t);
+	double * u = *(double **)params;
+	f[0] = -10.5051664753157 * y[0] -
+			-20.3960964408726 * y[1] -
+			-153.6739380022962 * y[2] -
+			-0.7158438576349 * y[3] -
+			-0.0706084959816 * y[4] + u[0];
+	f[1] = y[0];
+	f[2] = y[1];
+	f[3] = y[2];
+	f[4] = y[3];
+	return GSL_SUCCESS;
+}
+
+double
+generic_fitness_comp(struct Fis * fis,
+		int (* fun)(double t, const double y[], double dydt[], void * params),
+		double C[3])
+{
+	double * u = malloc(sizeof(double));;
+	gsl_odeiv2_system f4 = {f4_dyn, NULL, 5, &u};
+
+
+	gsl_odeiv2_driver * d =
+		gsl_odeiv2_driver_alloc_y_new(&f4, gsl_odeiv2_step_rk8pd,
+									1e-3, 1e-3, 0.0);
+
+	int i;
+	double t = 0.0;
+	double y[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+	double tt[nsteps], y0[nsteps];
+	double kp, ki, kd;
+	double ep[nsteps], ei[nsteps], ed[nsteps];
+	double e[3], out[3];
+	ep[0] = 0; ei[0] = 0; ed[0] = 0;
+
+	tt[0] = 0; y0[0] = 0;
+	u[0] = 0;
+	for (i = 1; i < nsteps; i++) {
+		double ti = i * t1 / nsteps;
+		int status = gsl_odeiv2_driver_apply(d, &t, ti, y);
+
+		if (status != GSL_SUCCESS) {
+			printf("error, return value=%d\n",status);
+			break;
+		}
+
+		tt[i] = t;
+		y0[i] = C[0] * y[2] +
+				 C[1] * y[3] +
+				 C[0] * y[4];
+		ep[i] = (1 - y0[i]);
+		ei[i] = ei[i - 1] + (t1 / nsteps) * ep[i];
+		ed[i] = (ep[i] - ep[i - 1]) / (t1 / nsteps);
+		e[0] = (ep[i] + 10) / 10.0;
+		e[1] = (ei[i] + 10) / 10.0;
+		e[2] = (ed[i] + 10) / 10.0;
+		evalfis(out,e,fis);
+//		u[0] = (out[0] - 0.5) * 10; //If single output FIS directly controls force
+		kp = out[0] * 20; ki = out[1] * 5; kd = out[2] * 10; //If fuzzy-PID
+		u[0] = kp*ep[i] + ki*ei[i] + kd*ed[i];
+	}
+	free(u);
+	gsl_odeiv2_driver_free (d);
+	return stepinfo(nsteps, tt, y0, 0);
+}
+
 double f4_fitness(struct Fis * fis) {
 	double * u = malloc(sizeof(double));;
 
@@ -56,7 +160,7 @@ double f4_fitness(struct Fis * fis) {
 
 	int i;
 	double t = 0.0;
-	double y[5] = {1.0, 0.0, 0.0, 0.0, 0.0};
+	double y[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 	double tt[nsteps], y0[nsteps];
 	double kp, ki, kd;
 	double ep[nsteps], ei[nsteps], ed[nsteps];
@@ -91,7 +195,7 @@ double f4_fitness(struct Fis * fis) {
 	}
 	free(u);
 	gsl_odeiv2_driver_free (d);
-	return stepinfo(nsteps, tt, y0);
+	return stepinfo(nsteps, tt, y0, 0);
 }
 
 double PID_fitness(double kp, double ki, double kd, gnuplot_ctrl * h) {
@@ -106,7 +210,7 @@ double PID_fitness(double kp, double ki, double kd, gnuplot_ctrl * h) {
 
 	int i;
 	double t = 0.0;
-	double y[5] = {1.0, 0.0, 0.0, 0.0, 0.0};
+	double y[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 	double tt[nsteps], y0[nsteps];
 	double ep[nsteps], ei[nsteps], ed[nsteps];
 	ep[0] = 1; ei[0] = 0; ed[0] = 0;
@@ -135,7 +239,7 @@ double PID_fitness(double kp, double ki, double kd, gnuplot_ctrl * h) {
 	free(u);
 	gsl_odeiv2_driver_free (d);
 	gnuplot_plot_xy(h,tt,y0,nsteps,"PID Response");
-	double cost = stepinfo(nsteps, tt, y0);
+	double cost = stepinfo(nsteps, tt, y0, 1);
 	printf("%f\n",cost);
 	return cost;
 }
@@ -152,12 +256,12 @@ void f4_fis_plot(struct Fis * fis) {
 
 	int i;
 	double t = 0.0;
-	double y[5] = {1.0, 0.0, 0.0, 0.0, 0.0};
+	double y[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 	double tt[nsteps], y0[nsteps];
 	double kp, ki, kd;
 	double ep[nsteps], ei[nsteps], ed[nsteps];
 	double e[3], out[3];
-	ep[0] = 1; ei[0] = 0; ed[0] = 0;
+	ep[0] = 0; ei[0] = 0; ed[0] = 0;
 
 	tt[0] = 0; y0[0] = 0;
 	u[0] = 0;
@@ -192,6 +296,9 @@ void f4_fis_plot(struct Fis * fis) {
 	h1 = gnuplot_init();
 	gnuplot_setstyle(h1,"lines");
 	gnuplot_plot_xy(h1, tt, y0, nsteps, "FIS-controlled response");
+	printf("FIS data:\n");
+	stepinfo(nsteps, tt, y0, 1);
+	printf("PID data:\n");
 	PID_fitness(5.8, 0.47, 2.85,h1);
 	getchar();
 	gnuplot_close(h1);
@@ -223,10 +330,17 @@ int main(int argc, char *argv[]) {
 	struct Fis * bestfis = run_ga(spcs, hp, f4_fitness);
 
 	f4_fis_plot(bestfis);
-
+	fis_print(bestfis,NULL);
+	FILE * fd = fopen("output.fis", "w");
+	fis_print(bestfis,fd);
 	fis_destroy(bestfis);
 
-//	printf("%f\n",PID_fitness(5.8, 0.47, 2.85));
+/*	gnuplot_ctrl * h;
+	h = gnuplot_init();
+	gnuplot_setstyle(h,"lines");
+	printf("%f\n",PID_fitness(5.8, 0.47, 2.85,h));
+	getchar();
+	gnuplot_close(h);*/
 
 	specs_clear(spcs);
 	free(hp);

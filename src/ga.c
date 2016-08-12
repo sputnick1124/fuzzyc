@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <math.h>
 #include <time.h>
-#include <omp.h>
+//#include <omp.h>
 #include "../include/ga.h"
 #include "../include/fuzzy.h"
 
@@ -994,7 +994,9 @@ run_ga(
 			free(pop2);
 			printf("%d Generations\n",gen);
 			return ret_fis;
-		} else {}
+		} else if (gen == hp->max_gen - 1) {
+			break;
+		}
 		population_iter(pop1, pop2, rank, gen, hp, spcs);
 		population_switch(&pop1, &pop2);
 	}

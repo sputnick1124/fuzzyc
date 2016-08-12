@@ -254,26 +254,29 @@ struct Rule *create_rule(double input[][3], int num_in, double output[][3], int 
     return rule;
 }
 
-void print_rule(struct Rule *rule) {
+void print_rule(struct Rule *rule, FILE * fd) {
     int i, p;
 
-	printf("rule is located at %p\n",rule);
+	if (fd == NULL) {
+		fd = stdout;
+	}
+//	fprintf(fd, "rule is located at %p\n",rule);
 
-    printf("%d inputs:\n",rule->num_in);
+    fprintf(fd, "%d inputs:\n",rule->num_in);
     for (i = 0; i < rule->num_in; i++) {
         for (p = 0; p < 3; p++) {
-            printf("%0.2f ", rule->input[i][p]);
+            fprintf(fd, "%0.2f ", rule->input[i][p]);
         }
-        printf("\n");
+        fprintf(fd, "\n");
     }
-    printf("%d outputs:\n",rule->num_out);
+    fprintf(fd, "%d outputs:\n",rule->num_out);
     for (i = 0; i < rule->num_out; i++) {
         for (p = 0; p < 3; p++) {
-            printf("%0.2f ", rule->output[i][p]);
+            fprintf(fd, "%0.2f ", rule->output[i][p]);
         }
-        printf("\n");
+        fprintf(fd, "\n");
     }
-    printf("\n\n");
+    fprintf(fd, "\n\n");
 }
 
 void destroy_rules(struct Rule ** rule_list, int num_rule) {
@@ -459,5 +462,27 @@ void get_fis(struct Rule ** rule_list,
 		}
 
 		rule_list[rule] = create_rule(input_list, num_in, output_list, num_out);
+	}
+}
+
+void
+fis_print(struct Fis * fis, FILE * fd)
+{
+	int rule, in, out;
+
+	if (fd == NULL) {
+		fd = stdout;
+	}
+
+	for (rule = 0; rule < fis->num_rule; rule++) {
+		fprintf(fd, "INPUT %d:\n\t[", rule);
+		for (in = 0; in < fis->rule_list[rule]->num_in; in++) {
+			print_rule(fis->rule_list[rule], fd);
+		}
+		fprintf(fd, "]\nOUTPUT %d:\n\t[", rule);
+		for (out = 0; out < fis->rule_list[rule]->num_out; out++) {
+			print_rule(fis->rule_list[rule], fd);
+		}
+		fprintf(fd, "]\n");
 	}
 }
