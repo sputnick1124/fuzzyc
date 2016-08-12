@@ -9,8 +9,10 @@ int test_chromo(int num_params, double chromo[]) {
 	int p;
 	for (p = 2; p < num_params; p += 3) {
 		if (chromo[p-2] > chromo[p-1]) {
+//			printf("chromo[%d-2] > chromo[%d-1]\n",p,p);
 			return 0;
 		} else if ( chromo[p-1] > chromo[p]) {
+//			printf("chromo[%d-1] > chromo[%d]\n",p,p);
 			return 0;
 		} else {
 			return 1;
@@ -24,7 +26,8 @@ int test_consequents(int num_out, int num_rule, int consequents[], int out_mfs[]
 	int c = 0;
 	for (out = 0; out < num_out; out++) {
 		for (rule = 0; rule < num_rule; c++, rule++) {
-			if (consequents[c] >= out_mfs[out]) {
+			if (consequents[c] >= out_mfs[out] | consequents[c] < 0) {
+//				printf("consequents[%d] >= %d for output %d\n",c, out_mfs[out], out);
 				return 0;
 			}
 		}
@@ -52,9 +55,9 @@ void chromosome_print(int num_params, double chromo[]) {
 }
 
 
-void cons_print(int num_rules, int consequents[]) {
+void cons_print(int num_out, int num_rules, int consequents[]) {
 	int r;
-	for (r = 0; r < num_rules; r++) {
+	for (r = 0; r < num_out * num_rules; r++) {
 		printf("| %d |", consequents[r]);
 	}
 }
@@ -96,7 +99,7 @@ int main(int argc, char * argv[]) {
 	int ind;
 	int in, test;
 	int fails = 0;
-	int test_num = 1000;
+	int test_num = 1000000;
 
 	srand48((long int) time(NULL));
 	srand((long int) time(NULL));
@@ -118,6 +121,19 @@ int main(int argc, char * argv[]) {
 		if (!test_chromo(num_params, params)) {
 			printf("Test %d failed:\n",test);
 			chromosome_print(num_params, params);
+			fails++;
+			//return 1;
+		}
+	}
+	printf("%d tests failed\n",fails);
+
+	/*Test that rand_consequents returns a valid list of consequents*/
+	printf("Testing rand_consequents\n");
+	fails = 0;
+	for (test = 0; test < test_num; test++) {
+		rand_consequents(num_out, num_rules, consequents, out_mfs);
+		if (!test_consequents(num_out, num_rules, consequents, out_mfs)) {
+			printf("Test %d failed:\n",test);
 			fails++;
 			//return 1;
 		}
@@ -243,6 +259,9 @@ int main(int argc, char * argv[]) {
 	fails = 0;
 	for (test = 0; test < pop_size; test++) {
 		if (!individual_test(population[test], num_params, num_out, num_rules, out_mfs)) {
+//			chromosome_print(num_params, population[test]->params);
+//			cons_print(num_out, num_rules, population[test]->consequents);
+//			printf("\n");
 			fails++;
 		}
 	}

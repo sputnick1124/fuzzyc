@@ -93,7 +93,7 @@ int main(void)
 //	rand_consequents(num_out, num_rule, consequents, out_mfs);
 
 	struct Specs * spcs = specs_set(num_in, in_mfs, num_out, out_mfs);
-	struct Individual * ind = individual_create(num_params, params, num_rule, consequents);
+	struct Individual * ind = individual_create(num_params, params, num_rule, num_out, consequents);
 
 	struct Fis * fis = individual_to_fis(ind, spcs);
 

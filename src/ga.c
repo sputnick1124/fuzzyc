@@ -234,6 +234,7 @@ individual_create(
 	int num_params,
 	double params[],
 	int num_rule,
+	int num_out,
 	int consequents[])
 {
 	int p, r;
@@ -249,13 +250,13 @@ individual_create(
 		ind->params[p] = params[p];
 	}
 
-	ind->consequents = malloc(num_rule * sizeof(int));
+	ind->consequents = malloc(num_rule * num_out * sizeof(int));
 	if (ind->consequents == NULL) {
 		free(ind->params);
 		free(ind);
 		return NULL;
 	}
-	for (r = 0; r < num_rule; r++) {
+	for (r = 0; r < num_rule * num_out; r++) {
 		ind->consequents[r] = consequents[r];
 	}
 
@@ -267,13 +268,14 @@ individual_copy(
 	struct Individual * ind1,
 	struct Individual * ind2,
 	int num_params,
-	int num_rule)
+	int num_rule,
+	int num_out)
 {
 	int rule, p;
 	for (p = 0; p < num_params; p++) {
 		ind2->params[p] = ind1->params[p];
 	}
-	for (rule = 0; rule < num_rule; rule++) {
+	for (rule = 0; rule < num_rule * num_out; rule++) {
 		ind2->consequents[rule] = ind1->consequents[rule];
 	}
 }
@@ -433,11 +435,10 @@ rand_consequents(
 	int consequents[num_rule * num_out],
 	int out_mfs[])
 {
-	int out, rule, c;
-	c = 0;
-	for (out = 0; out < num_out; out++) {
-		for (rule = 0; rule < num_rule; c++, rule++) {
-			consequents[c] = rand_i(out_mfs[out]);
+	int out, rule;
+	for (rule = 0; rule < num_rule; rule++) {
+		for (out = 0; out < num_out; out++) {
+			consequents[rule * num_out + out] = rand_i(out_mfs[out]);
 //			printf("%d ",consequents[c]);
 		}
 //		printf("\n");
@@ -453,11 +454,10 @@ add_consequents(
 	int consequents[num_rule * num_out])
 {
 	int out, rule;
-	int c = 0;
 	int width = num_in + num_out;
-	for (rule = 0; rule < num_rule; c++, rule++) {
+	for (rule = 0; rule < num_rule; rule++) {
 		for (out = 0; out < num_out; out++) {
-			rules[rule * width + num_in + out] = consequents[c];
+			rules[rule * width + num_in + out] = consequents[rule * num_out + out];
 		}
 	}
 }
@@ -794,7 +794,7 @@ population_init(
 	for (i = 0; i < pop_size; i++) {
 		rand_params(tmp_params, num_in, in_mfs, num_out, out_mfs);
 		rand_consequents(num_out, num_rules, tmp_consequents, out_mfs);
-		population[i] = individual_create(num_params, tmp_params, num_rules, tmp_consequents);
+		population[i] = individual_create(num_params, tmp_params, num_rules, num_out, tmp_consequents);
 	}
 }
 
@@ -819,7 +819,8 @@ population_iter(
 				pop_now[rank[ind]],
 				pop_next[ind],
 				spcs->num_params,
-				spcs->num_rule);
+				spcs->num_rule,
+				spcs->num_out);
 		} else if (ind < num_elite + num_cross + num_mut) {
 			select1 = rand_tri_i(pop_size);
 			select2 = rand_tri_i(pop_size);

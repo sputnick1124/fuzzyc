@@ -12,13 +12,15 @@ struct Individual *individual_create(
 	int num_params,
 	double params[],
 	int num_rule,
+	int num_out,
 	int consequents[]);
 
 void individual_copy(
 	struct Individual * ind1,
 	struct Individual * ind2,
 	int num_params,
-	int num_rule);
+	int num_rule,
+	int num_out);
 
 void individual_destroy(struct Individual * ind);
 
