@@ -5,8 +5,8 @@
 #include <gsl/gsl_odeiv2.h>
 #include <gsl/gsl_matrix.h>
 
-#include "../../include/fuzzy.h"
-#include "../../include/gnuplot_i.h"
+#include "fuzzy.h"
+#include "gnuplot_i.h"
 
 
 int f4_dyn(double t, const double y[], double f[],

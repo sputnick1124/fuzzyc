@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([libfuzzy], [0.1], [stocktno@mail.uc.edu])
-AC_CONFIG_SRCDIR([include/fuzzy.h])
+AC_CONFIG_SRCDIR([src/fuzzy.h])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
@@ -17,6 +17,8 @@ AC_PROG_MKDIR_P
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lm':
 AC_CHECK_LIB([m], [sqrt])
+AC_CHECK_LIB([gslcblas], [cblas_dgemm])
+AC_CHECK_LIB([gsl], [gsl_blas_dgemm])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h])
@@ -31,6 +33,6 @@ AC_CHECK_FUNCS([pow])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 src/test/Makefile
-				 src/example/Makefile])
+                 test/Makefile
+				 example/Makefile])
 AC_OUTPUT

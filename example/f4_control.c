@@ -8,9 +8,9 @@
 #include <gsl/gsl_odeiv2.h>
 #include <gsl/gsl_matrix.h>
 
-#include "../../include/fuzzy.h"
-#include "../../include/ga.h"
-#include "../../include/gnuplot_i.h"
+#include "fuzzy.h"
+#include "ga.h"
+#include "gnuplot_i.h"
 
 static const int nsteps = 1000;
 static const double t1 = 10.0;
@@ -19,12 +19,21 @@ double stepinfo(int nsteps, double t[nsteps], double x[nsteps], int flag) {
 	double max = 0;
 	double ts = 0;
 	int i;
+	int osc = 0;
+	int der = 1; //check for change in derivative (the idea being to penalize oscillations)
 	for (i = 0; i < nsteps; i++) {
 		max = (x[i] > max ? x[i] : max);
 		ts = (fabs(x[i] - 1.0) > 0.02 ? t[i] : ts);
 		if (flag) {
 			printf("t=%0.2f\tx(t) = %0.4f\tfabs(x(t)-1)=%0.4f\tts=%0.2f\n",t[i], x[i], fabs(x[i] - 1.0), ts);
 		} else {}
+		if (i > 0) {
+			if ( (der && (x[i] < x[i - 1])) | (!der && (x[i] > x[i-1]))) {
+				der ^= 1;
+				osc += 1;
+//				printf("x[%d] = %f, x[%d] = %f, der = %d, osc = %d\n", i,x[i],i-1,x[i-1],der,osc);
+			}
+		}
 	}
 	double os = (max > 1 ? max - 1 : 0);
 	if (max > 1000) {return 101.0;}

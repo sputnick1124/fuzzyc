@@ -3,7 +3,7 @@
 #include <math.h>
 #include <assert.h>
 
-#include "../include/fuzzy.h"
+#include "fuzzy.h"
 
 double minimum(int n_val, double values[n_val]) {
 	/*Find minimum value in an array of doubles*/

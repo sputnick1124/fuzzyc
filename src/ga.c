@@ -5,8 +5,8 @@
 #include <time.h>
 #include <string.h>
 #include <omp.h>
-#include "../include/ga.h"
-#include "../include/fuzzy.h"
+#include "ga.h"
+#include "fuzzy.h"
 
 /** Some utility functions to take care of the mechanics **/
 int
@@ -260,8 +260,6 @@ individual_copy(
 	int num_rule,
 	int num_out)
 {
-	int rule, p;
-
 	memcpy(ind2->params, ind1->params, num_params * sizeof(double));
 
 	memcpy(ind2->consequents, ind1->consequents, num_rule * num_out * sizeof(int));

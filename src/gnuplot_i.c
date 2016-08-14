@@ -27,7 +27,7 @@
                                 Includes
  ---------------------------------------------------------------------------*/
 
-#include "../include/gnuplot_i.h"
+#include "gnuplot_i.h"
 
 #include <stdio.h>
 #include <stdlib.h>

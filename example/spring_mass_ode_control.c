@@ -8,9 +8,9 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
 
-#include "../../include/fuzzy.h"
-#include "../../include/ga.h"
-#include "../../include/gnuplot_i.h"
+#include "fuzzy.h"
+#include "ga.h"
+#include "gnuplot_i.h"
 
 const double om = 0.15;
 

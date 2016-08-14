@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "../../include/fuzzy.h"
+#include "fuzzy.h"
 
 
 double genfuzex(double x, double y) {

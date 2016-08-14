@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "../../include/ga.h"
-#include "../../include/fuzzy.h"
-#include "../../include/gnuplot_i.h"
+#include "ga.h"
+#include "fuzzy.h"
+#include "gnuplot_i.h"
 
 
 double
@@ -69,7 +69,7 @@ plot_line(struct Fis * fis)
 	gnuplot_close(h1);
 }
 
-  
+
 int
 main(void)
 {
@@ -77,8 +77,8 @@ main(void)
 	srand48(rand());
 	int num_in = 1;
 	int num_out = 1;
-	int in_mfs[1] = {5};
-	int out_mfs[1] = {5};
+	int in_mfs[1] = {2};
+	int out_mfs[1] = {2};
 	struct Specs * spcs = specs_set(num_in, in_mfs, num_out, out_mfs);
 	struct HyperParams * hp = malloc(sizeof(struct HyperParams));
 
@@ -86,7 +86,7 @@ main(void)
 	hp->elite = 0.05;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 500;
+	hp->max_gen = 100;
 
 	struct Fis * bestfis = run_ga(spcs, hp, fit_line, NULL);
 

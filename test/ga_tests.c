@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "../../include/ga.h"
-#include "../../include/fuzzy.h"
+#include "ga.h"
+#include "fuzzy.h"
 
 int test_chromo(int num_params, double chromo[]) {
 	int p;

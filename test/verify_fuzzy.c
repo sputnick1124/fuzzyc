@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "../../include/gnuplot_i.h"
-#include "../../include/fuzzy.h"
-#include "../../include/ga.h"
+#include "gnuplot_i.h"
+#include "fuzzy.h"
+#include "ga.h"
 
 double
 r_squared(

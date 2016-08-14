@@ -5,7 +5,7 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
 
-#include "../../include/gnuplot_i.h"
+#include "gnuplot_i.h"
 
 const double om = 0.15;
 
