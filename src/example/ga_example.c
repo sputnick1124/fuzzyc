@@ -88,7 +88,7 @@ main(void)
 	hp->mutate = 0.25;
 	hp->max_gen = 500;
 
-	struct Fis * bestfis = run_ga(spcs, hp, fit_line);
+	struct Fis * bestfis = run_ga(spcs, hp, fit_line, NULL);
 
 	int r;
 	for (r = 0; r < spcs->num_rule; r++) {
@@ -99,6 +99,8 @@ main(void)
 	}
 	plot_line(bestfis);
 	free(hp);
+
+
 	specs_clear(spcs);
 
 //	double x[1], out[1];

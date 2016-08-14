@@ -3,7 +3,8 @@
 #include <assert.h>
 #include <math.h>
 #include <time.h>
-//#include <omp.h>
+#include <string.h>
+#include <omp.h>
 #include "../include/ga.h"
 #include "../include/fuzzy.h"
 
@@ -158,7 +159,6 @@ specs_set(
 struct Specs *
 specs_copy(struct Specs * oldspcs)
 {
-	int in, out, rule, ant, range, limit;
 	struct Specs * spcs = malloc(sizeof(struct Specs));
 	assert(spcs != NULL);
 
@@ -196,24 +196,13 @@ specs_copy(struct Specs * oldspcs)
 		return NULL;
 	}
 
-	for (in = 0; in < spcs->num_in; in++) {
-		spcs->in_mfs[in] = oldspcs->in_mfs[in];
-	}
-	for (out = 0; out < spcs->num_out; out++) {
-		spcs->out_mfs[out] = oldspcs->out_mfs[out];
-	}
+	memcpy(spcs->in_mfs, oldspcs->in_mfs, spcs->num_in * sizeof(int));
 
-	for (rule = 0; rule < spcs->num_rule; rule++) {
-		for (ant = 0; ant < spcs->num_in; ant++) {
-			spcs->rules[rule * spcs->num_in + ant] = oldspcs->rules[rule * spcs->num_in + ant];
-		}
-	}
+	memcpy(spcs->out_mfs, oldspcs->out_mfs, spcs->num_out * sizeof(int));
 
-	for (range = 0; range < spcs->num_params; range++) {
-		for (limit = 0; limit < 2; limit++) {
-			spcs->ranges[range * 2 + limit] = oldspcs->ranges[range * 2 + limit];
-		}
-	}
+	memcpy(spcs->rules, oldspcs->rules, (spcs->num_rule * (spcs->num_in + spcs->num_out) * sizeof(int)));
+
+	memcpy(spcs->ranges, oldspcs->ranges, spcs->num_params * 2 * sizeof(double));
 
 	return spcs;
 }
@@ -272,12 +261,10 @@ individual_copy(
 	int num_out)
 {
 	int rule, p;
-	for (p = 0; p < num_params; p++) {
-		ind2->params[p] = ind1->params[p];
-	}
-	for (rule = 0; rule < num_rule * num_out; rule++) {
-		ind2->consequents[rule] = ind1->consequents[rule];
-	}
+
+	memcpy(ind2->params, ind1->params, num_params * sizeof(double));
+
+	memcpy(ind2->consequents, ind1->consequents, num_rule * num_out * sizeof(int));
 }
 
 void
@@ -490,7 +477,6 @@ sp_c_crossover(
 	int parent2[])
 {
 /* Single-point crossover*/
-	/*We definitely don't care about the first or last two params*/
 	int i = rand_i(num_params);
 	int p;
 	printf("%d\n",i);
@@ -918,21 +904,21 @@ population_rank(
 	double * ranked_fitness[pop_size];
 	double tmp_fit;
 	struct Fis * tmp_fis;
-	// Parallelize
-//	#pragma omp parallel private(tmp_fis)
+	struct Specs * tmp_spcs;
+	// Parallelize with omp directives
+	#pragma omp parallel private(tmp_fis, tmp_spcs)
 	{
-//		#pragma omp for
+		#pragma omp for
 		for (ind = 0; ind < pop_size; ind++) {
-			tmp_fis = individual_to_fis(population[ind],spcs);
+			tmp_spcs = specs_copy(spcs);
+			tmp_fis = individual_to_fis(population[ind],tmp_spcs);
 			tmp_fit = fit_fcn(tmp_fis);
-//			#pragma omp critical
-			{
 			fitness[ind] = tmp_fit;
 			ranked_fitness[ind] = &fitness[ind];
-			}
 			fis_destroy(tmp_fis);
+			specs_clear(tmp_spcs);
 		}
-	} //end omp
+	} //end omp parallelization
 	*fit_min = minimum(pop_size, fitness);
 	qsort(ranked_fitness, pop_size, sizeof(double *), cmpdouble_p);
 	for (ind = 0; ind < pop_size; ind++) {
@@ -954,7 +940,8 @@ struct Fis *
 run_ga(
 	struct Specs * spcs,
 	struct HyperParams * hp,
-	fitness_fcn fit_fcn)
+	fitness_fcn fit_fcn,
+	FILE * fis_log)
 {
 	struct Individual ** pop1 = malloc(hp->pop_size * sizeof(struct Individual *));
 	struct Individual ** pop2 = malloc(hp->pop_size * sizeof(struct Individual *));
@@ -986,8 +973,10 @@ run_ga(
 //		printf("pop1 is at %p \t pop2 is at %p\n", pop1, pop2);
 		population_rank(hp->pop_size, rank, pop1, spcs, fit_fcn, &fitness_hist[gen]);
 		printf("Ind[%d] Fitness: %f\n",rank[0],fitness_hist[gen]);
+//		individual_print(pop1[rank[0]], ga_log);
 		if ( (gen > 10) && (fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) ) {
 			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
+			individual_print(pop1[rank[0]], spcs, fis_log);
 			individuals_destroy(pop1, hp->pop_size);
 			individuals_destroy(pop2, hp->pop_size);
 			free(pop1);
@@ -1000,10 +989,103 @@ run_ga(
 		population_iter(pop1, pop2, rank, gen, hp, spcs);
 		population_switch(&pop1, &pop2);
 	}
+	individual_print(pop1[rank[0]], spcs, fis_log);
 	struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
 	individuals_destroy(pop1, hp->pop_size);
 	individuals_destroy(pop2, hp->pop_size);
 	free(pop1);
 	free(pop2);
 	return ret_fis;
+}
+
+void
+specs_print(struct Specs * spcs, FILE * fd)
+{
+	if (fd == NULL) {
+		return;
+	}
+
+	int in, out, rule, width;
+	fprintf(fd, "Specs:\n");
+	fprintf(fd, "num_in: %d\tin_mfs: {",spcs->num_in);
+	for (in = 0; in < spcs->num_in; in++) {
+		fprintf(fd, "%d ", spcs->in_mfs[in]);
+	}
+	fprintf(fd, "}\nnum_out: %d\tout_mfs: {",spcs->num_out);
+	for (out = 0; out < spcs->num_out; out++) {
+		fprintf(fd, "%d ", spcs->out_mfs[out]);
+	}
+
+	fprintf(fd,"}\nnum_rule: %d\n", spcs->num_rule);
+	width = spcs->num_in + spcs->num_out;
+	for (rule = 0; rule < spcs->num_rule; rule++) {
+		fprintf(fd, "\t{");
+		for (in = 0; in < spcs->num_in; in++) {
+			fprintf(fd, "%d ", spcs->rules[rule * width + in]);
+		}
+		fprintf(fd, "}\n");
+	}
+}
+
+void
+individual_print(struct Individual * ind, struct Specs * spcs, FILE * fd)
+{
+	if (fd == NULL) {
+		return;
+	}
+
+	int p, in, out;
+	int rule, arg;
+	int width = spcs->num_in + spcs->num_out;
+	add_consequents(
+		spcs->num_in,
+		spcs->num_out,
+		spcs->num_rule,
+		spcs->rules,
+		ind->consequents);
+
+	fprintf(fd, "num_in: %d\tin_mfs: {",spcs->num_in);
+	for (in = 0; in < spcs->num_in; in++) {
+		fprintf(fd, "%d ", spcs->in_mfs[in]);
+	}
+
+	fprintf(fd, "}\nnum_out: %d\tout_mfs: {",spcs->num_out);
+	for (out = 0; out < spcs->num_out; out++) {
+		fprintf(fd, "%d ", spcs->out_mfs[out]);
+	}
+	fprintf(fd, "}\n");
+
+	int mf = 0;
+	fprintf(fd, "MF Parameters:\n");
+	for (in = 0; in < spcs->num_in; in++) {
+		fprintf(fd, "\tInput %d:\n", in);
+		for (p = 0; p < spcs->in_mfs[in]; p++) {
+			fprintf(fd, "\t{%f %f %f}\n",
+				ind->params[3 * mf + 3 * p],
+				ind->params[3 * mf + 3 * p + 1],
+				ind->params[3 * mf + 3 * p + 2]);
+		}
+		mf += spcs->in_mfs[in];
+	}
+	for (out = 0; out < spcs->num_out; out++) {
+		fprintf(fd, "\tOutput %d:\n", out);
+		for (p = 0; p < spcs->out_mfs[out]; p++) {
+			fprintf(fd, "\t{%f %f %f}\n",
+				ind->params[3 * mf + 3 * p],
+				ind->params[3 * mf + 3 * p + 1],
+				ind->params[3 * mf + 3 * p + 2]);
+		}
+		mf += spcs->out_mfs[out];
+	}
+
+
+	fprintf(fd, "Rule Matrix:\n");
+
+	for (rule = 0; rule < spcs->num_rule; rule++) {
+		fprintf(fd, "{");
+		for (arg = 0; arg < width; arg++) {
+			fprintf(fd, "%d ", spcs->rules[rule * width + arg]);
+		}
+		fprintf(fd, "}\n");
+	}
 }

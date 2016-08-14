@@ -47,6 +47,10 @@ struct Specs *specs_copy(struct Specs *spcs);
 
 void specs_clear(struct Specs *spcs);
 
+void specs_print(struct Specs * spcs, FILE * fd);
+
+void individual_print(struct Individual * ind, struct Specs * spcs, FILE * fd);
+
 struct HyperParams
 {
 	int pop_size;
@@ -232,6 +236,7 @@ struct Fis *
 run_ga(
     struct Specs * spcs,
     struct HyperParams * hp,
-    fitness_fcn fit_fcn);
+    fitness_fcn fit_fcn,
+	FILE * fis_log);
 
 #endif

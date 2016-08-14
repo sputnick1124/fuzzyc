@@ -98,10 +98,11 @@ int f4_sup_dyn(double t, const double y[], double f[],
 double
 generic_fitness_comp(struct Fis * fis,
 		int (* fun)(double t, const double y[], double dydt[], void * params),
-		double C[3])
+		double C[3],
+		gnuplot_ctrl * h)
 {
 	double * u = malloc(sizeof(double));;
-	gsl_odeiv2_system f4 = {f4_dyn, NULL, 5, &u};
+	gsl_odeiv2_system f4 = {fun, NULL, 5, &u};
 
 
 	gsl_odeiv2_driver * d =
@@ -131,7 +132,7 @@ generic_fitness_comp(struct Fis * fis,
 		tt[i] = t;
 		y0[i] = C[0] * y[2] +
 				 C[1] * y[3] +
-				 C[0] * y[4];
+				 C[2] * y[4];
 		ep[i] = (1 - y0[i]);
 		ei[i] = ei[i - 1] + (t1 / nsteps) * ep[i];
 		ed[i] = (ep[i] - ep[i - 1]) / (t1 / nsteps);
@@ -145,6 +146,7 @@ generic_fitness_comp(struct Fis * fis,
 	}
 	free(u);
 	gsl_odeiv2_driver_free (d);
+	gnuplot_plot_xy(h, tt, y0, nsteps, "Fuzzy PID");
 	return stepinfo(nsteps, tt, y0, 0);
 }
 
@@ -198,10 +200,13 @@ double f4_fitness(struct Fis * fis) {
 	return stepinfo(nsteps, tt, y0, 0);
 }
 
-double PID_fitness(double kp, double ki, double kd, gnuplot_ctrl * h) {
+double PID_fitness(double kp, double ki, double kd,
+		int (* fun)(double t, const double y[], double dydt[], void * params),
+		double C[3],
+		gnuplot_ctrl * h) {
 	double * u = malloc(sizeof(double));;
 
-	gsl_odeiv2_system f4 = {f4_dyn, NULL, 5, &u};
+	gsl_odeiv2_system f4 = {fun, NULL, 5, &u};
 
 
 	gsl_odeiv2_driver * d =
@@ -228,9 +233,9 @@ double PID_fitness(double kp, double ki, double kd, gnuplot_ctrl * h) {
 		}
 
 		tt[i] = t;
-		y0[i] = 14.575021682567217 * y[2] +
-				 5.884648742411102 * y[3] +
-				 0.443191673894189 * y[4];
+		y0[i] = C[0] * y[2] +
+				 C[1] * y[3] +
+				 C[2] * y[4];
 		ep[i] = (1 - y0[i]);
 		ei[i] = ei[i - 1] + (t1 / nsteps) * ep[i];
 		ed[i] = (ep[i] - ep[i - 1]) / (t1 / nsteps);
@@ -239,8 +244,8 @@ double PID_fitness(double kp, double ki, double kd, gnuplot_ctrl * h) {
 	free(u);
 	gsl_odeiv2_driver_free (d);
 	gnuplot_plot_xy(h,tt,y0,nsteps,"PID Response");
-	double cost = stepinfo(nsteps, tt, y0, 1);
-	printf("%f\n",cost);
+	double cost = stepinfo(nsteps, tt, y0, 0);
+//	printf("%f\n",cost);
 	return cost;
 }
 
@@ -297,14 +302,14 @@ void f4_fis_plot(struct Fis * fis) {
 	gnuplot_setstyle(h1,"lines");
 	gnuplot_plot_xy(h1, tt, y0, nsteps, "FIS-controlled response");
 	printf("FIS data:\n");
-	stepinfo(nsteps, tt, y0, 1);
-	printf("PID data:\n");
-	PID_fitness(5.8, 0.47, 2.85,h1);
+	stepinfo(nsteps, tt, y0, 0);
+//	printf("PID data:\n");
+//	PID_fitness(5.8, 0.47, 2.85,h1);
 	getchar();
 	gnuplot_close(h1);
-	printf("min(ep) = %f\nmax(ep) = %f\n",minimum(nsteps,ep),maximum(nsteps,ep));
-	printf("min(ei) = %f\nmax(ei) = %f\n",minimum(nsteps,ei),maximum(nsteps,ei));
-	printf("min(ed) = %f\nmax(ed) = %f\n",minimum(nsteps,ed),maximum(nsteps,ed));
+//	printf("min(ep) = %f\nmax(ep) = %f\n",minimum(nsteps,ep),maximum(nsteps,ep));
+//	printf("min(ei) = %f\nmax(ei) = %f\n",minimum(nsteps,ei),maximum(nsteps,ei));
+//	printf("min(ed) = %f\nmax(ed) = %f\n",minimum(nsteps,ed),maximum(nsteps,ed));
 }
 
 
@@ -312,11 +317,9 @@ int main(int argc, char *argv[]) {
 	srand(time(NULL));
 	srand48(rand());
 	int num_in = 3;
-	int in_mfs[3] = {5,5,5};
-//	int num_out = 1;
-//	int out_mfs[1] = {5};
+	int in_mfs[3] = {3,3,3};
 	int num_out = 3;
-	int out_mfs[3] = {5,5,5};
+	int out_mfs[3] = {3,3,3};
 
 	struct Specs * spcs = specs_set(num_in, in_mfs, num_out, out_mfs);
 	struct HyperParams * hp = malloc(sizeof(struct HyperParams));
@@ -327,23 +330,65 @@ int main(int argc, char *argv[]) {
 	hp->mutate = 0.25;
 	hp->max_gen = 200;
 
-	struct Fis * bestfis = run_ga(spcs, hp, f4_fitness);
-
-	f4_fis_plot(bestfis);
-	fis_print(bestfis,NULL);
 	FILE * fd = fopen("output.fis", "w");
-	fis_print(bestfis,fd);
+	struct Fis * bestfis = run_ga(spcs, hp, f4_fitness, fd);
+	fclose(fd);
+
+/** Plot the comparison graphs between PID- and Fuzzy-controlled systems**/
+	double c1[3] = {14.575021682567217, 5.884648742411102, 0.443191673894189};
+	double c2[3] = {14.575021682567217, 5.949696444058977, 0.455333911535126};
+	double c3[3] = {113.8331814038286, 58.1700091157703, 0.7103463992707};
+	double c4[3] = {74.626865671641795, 12.531572904707232, -0.017962112514351};
+
+
+//	f4_fis_plot(bestfis);
+//	fis_print(bestfis,NULL);
+
+	gnuplot_ctrl * h1;
+	gnuplot_ctrl * h2;
+	gnuplot_ctrl * h3;
+	gnuplot_ctrl * h4;
+	h1 = gnuplot_init();
+	h2 = gnuplot_init();
+	h3 = gnuplot_init();
+	h4 = gnuplot_init();
+	gnuplot_setstyle(h1,"lines");
+	gnuplot_setstyle(h2,"lines");
+	gnuplot_setstyle(h3,"lines");
+	gnuplot_setstyle(h4,"lines");
+	gnuplot_set_xlabel(h1, "Time, s");
+	gnuplot_set_xlabel(h2, "Time, s");
+	gnuplot_set_xlabel(h3, "Time, s");
+	gnuplot_set_xlabel(h4, "Time, s");
+	gnuplot_set_ylabel(h1, "Theta, rad");
+	gnuplot_set_ylabel(h2, "Theta, rad");
+	gnuplot_set_ylabel(h3, "Theta, rad");
+	gnuplot_set_ylabel(h4, "Theta, rad");
+	generic_fitness_comp(bestfis, f4_dyn, c1, h1);
+	generic_fitness_comp(bestfis, f4_deg_dyn, c2, h2);
+	generic_fitness_comp(bestfis, f4_sub_dyn, c3, h3);
+	generic_fitness_comp(bestfis, f4_sup_dyn, c4, h4);
+	gnuplot_cmd(h1, "set terminal postscript colour eps");
+	gnuplot_cmd(h2, "set terminal postscript colour eps");
+	gnuplot_cmd(h3, "set terminal postscript colour eps");
+	gnuplot_cmd(h4, "set terminal postscript colour eps");
+	gnuplot_cmd(h1, "set output \"f4_approach.eps\"");
+	gnuplot_cmd(h2, "set output \"f4_deg.eps\"");
+	gnuplot_cmd(h3, "set output \"f4_sub.eps\"");
+	gnuplot_cmd(h4, "set output \"f4_sup.eps\"");
+	PID_fitness(5.8, 0.47, 2.85,f4_dyn, c1,h1);
+	PID_fitness(5.8, 0.47, 2.85,f4_deg_dyn, c2,h2);
+	PID_fitness(5.8, 0.47, 2.85,f4_sub_dyn, c3,h3);
+	PID_fitness(5.8, 0.47, 2.85,f4_sup_dyn, c4,h4);
+	gnuplot_close(h1);
+	gnuplot_close(h2);
+	gnuplot_close(h3);
+	gnuplot_close(h4);
+
 	fis_destroy(bestfis);
-
-/*	gnuplot_ctrl * h;
-	h = gnuplot_init();
-	gnuplot_setstyle(h,"lines");
-	printf("%f\n",PID_fitness(5.8, 0.47, 2.85,h));
-	getchar();
-	gnuplot_close(h);*/
-
 	specs_clear(spcs);
 	free(hp);
 
 	return 0;
 }
+

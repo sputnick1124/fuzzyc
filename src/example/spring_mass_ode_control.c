@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
 	hp->mutate = 0.25;
 	hp->max_gen = 20;
 
-	struct Fis * bestfis = run_ga(spcs, hp, spring_fitness);
+	struct Fis * bestfis = run_ga(spcs, hp, spring_fitness, stdout);
 
 	plot_fis_control(bestfis);
 

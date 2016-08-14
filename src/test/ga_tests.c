@@ -26,7 +26,7 @@ int test_consequents(int num_out, int num_rule, int consequents[], int out_mfs[]
 	int c = 0;
 	for (out = 0; out < num_out; out++) {
 		for (rule = 0; rule < num_rule; c++, rule++) {
-			if (consequents[c] >= out_mfs[out] | consequents[c] < 0) {
+			if ( (consequents[c] >= out_mfs[out]) | (consequents[c] < 0) ) {
 //				printf("consequents[%d] >= %d for output %d\n",c, out_mfs[out], out);
 				return 0;
 			}
@@ -383,6 +383,14 @@ int main(int argc, char * argv[]) {
 	}
 	printf("%d tests failed\n",fails);
 
+    printf("Test the specs_print function\n");
+    specs_print(spcs,stdout);
+
+    printf("Test the specs_copy function\n");
+    struct Specs * new_spcs = specs_copy(spcs);
+    specs_print(new_spcs, stdout);
+    specs_clear(new_spcs);
+
 	specs_clear(spcs);
 //	individuals_destroy(population, pop_size);
 	individuals_destroy(tmp_pop, pop_size);
@@ -392,7 +400,7 @@ int main(int argc, char * argv[]) {
 
 	spcs = specs_set(1,imf,2,omf);
 //	hp->max_gen = 5;
-	struct Fis * bestfis = run_ga(spcs,hp,fit_line);
+	struct Fis * bestfis = run_ga(spcs,hp,fit_line, NULL);
 
 	specs_clear(spcs);
 	free(hp);

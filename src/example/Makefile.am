@@ -1,4 +1,4 @@
-AM_CFLAGS = -g -Wall #-fopenmp
+AM_CFLAGS = -g -O4 -Wall -fopenmp
 
 bin_PROGRAMS = simple_example2 ga_example spring_mass_ode_control f4_dynamics f4_control
 simple_example2_SOURCES = simple_example2.c ../fuzzy.c
