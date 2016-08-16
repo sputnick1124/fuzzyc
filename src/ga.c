@@ -974,6 +974,7 @@ run_ga(
 //		individual_print(pop1[rank[0]], ga_log);
 		if ( (gen > 10) && (fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) ) {
 			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
+			printf("Best fitness:%f\n",fit_fcn(ret_fis));
 			individual_print(pop1[rank[0]], spcs, fis_log);
 			individuals_destroy(pop1, hp->pop_size);
 			individuals_destroy(pop2, hp->pop_size);

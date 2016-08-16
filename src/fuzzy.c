@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <assert.h>
 
@@ -486,3 +487,4 @@ fis_print(struct Fis * fis, FILE * fd)
 		fprintf(fd, "]\n");
 	}
 }
+

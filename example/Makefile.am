@@ -1,4 +1,4 @@
-AM_CFLAGS = -fopenmp -I../src
+AM_CFLAGS = -O4 -fopenmp -I../src
 
 bin_PROGRAMS = simple_example2 ga_example spring_mass_ode_control f4_dynamics f4_control
 
