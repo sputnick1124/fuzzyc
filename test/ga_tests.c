@@ -74,7 +74,7 @@ fit_line(struct Fis * fis)
 	for (i = 0; i < max; i++) {
 		x[0] = (double)i * dx;
 		evalfis(out,x,fis);
-		cost += (out[0] - dx * (double)i) * (out[1] - dx * (double)i);
+		cost += fabs(out[0] - dx * (double)i) * fabs(out[1] - dx * (double)i);
 	}
 	return cost;
 }

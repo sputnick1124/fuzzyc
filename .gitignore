@@ -1,3 +1,6 @@
+*
+!*.*
+!*/
 scratch*
 *.out
 prof_output
@@ -15,3 +18,10 @@ COPYING
 config.*
 *.scan
 build
+*.eps
+*.fuse*
+*.mexa64
+*.tex
+*.log
+*.eps
+ 

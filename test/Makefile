@@ -76,7 +76,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = ga_tests$(EXEEXT) verify_fuzzy$(EXEEXT)
+noinst_PROGRAMS = ga_tests$(EXEEXT) verify_fuzzy$(EXEEXT)
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -88,8 +88,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
-PROGRAMS = $(bin_PROGRAMS)
+PROGRAMS = $(noinst_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_ga_tests_OBJECTS = ga_tests.$(OBJEXT) ../src/ga.$(OBJEXT) \
 	../src/fuzzy.$(OBJEXT)
@@ -154,12 +153,12 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc/missing aclocal-1.14
+ACLOCAL = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing aclocal-1.14
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
-AUTOCONF = ${SHELL} /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoconf
-AUTOHEADER = ${SHELL} /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoheader
-AUTOMAKE = ${SHELL} /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc/missing automake-1.14
+AUTOCONF = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoconf
+AUTOHEADER = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing autoheader
+AUTOMAKE = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing automake-1.14
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -187,7 +186,7 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = -lgsl -lgslcblas -lm 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc/missing makeinfo
+MAKEINFO = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/missing makeinfo
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 PACKAGE = libfuzzy
@@ -202,10 +201,10 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = 
 VERSION = 0.1
-abs_builddir = /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc/test
-abs_srcdir = /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc/test
-abs_top_builddir = /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc
-abs_top_srcdir = /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc
+abs_builddir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/test
+abs_srcdir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/test
+abs_top_builddir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc
+abs_top_srcdir = /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
@@ -225,7 +224,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /media/Windows/Users/sputn/Documents/School/Research/fuzzy_dev/fuzzyc/install-sh
+install_sh = ${SHELL} /home/nick/Documents/School/Research/fuzzy_dev/fuzzyc/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -282,48 +281,9 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
-	fi; \
-	for p in $$list; do echo "$$p $$p"; done | \
-	sed 's/$(EXEEXT)$$//' | \
-	while read p p1; do if test -f $$p \
-	  ; then echo "$$p"; echo "$$p"; else :; fi; \
-	done | \
-	sed -e 'p;s,.*/,,;n;h' \
-	    -e 's|.*|.|' \
-	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
-	sed 'N;N;N;s,\n, ,g' | \
-	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
-	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
-	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
-	    else { print "f", $$3 "/" $$4, $$1; } } \
-	  END { for (d in files) print "f", d, files[d] }' | \
-	while read type dir files; do \
-	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
-	    test -z "$$files" || { \
-	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
-	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
-	    } \
-	; done
 
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	files=`for p in $$list; do echo "$$p"; done | \
-	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
-	      -e 's/$$/$(EXEEXT)/' \
-	`; \
-	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(bindir)" && rm -f $$files
-
-clean-binPROGRAMS:
-	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
 ../src/$(am__dirstamp):
 	@$(MKDIR_P) ../src
 	@: > ../src/$(am__dirstamp)
@@ -460,9 +420,6 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
-	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -497,7 +454,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
+clean-am: clean-generic clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ../src/$(DEPDIR) ./$(DEPDIR)
@@ -523,7 +480,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS
+install-exec-am:
 
 install-html: install-html-am
 
@@ -562,23 +519,22 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS
+uninstall-am:
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean \
-	clean-binPROGRAMS clean-generic cscopelist-am ctags ctags-am \
-	distclean distclean-compile distclean-generic distclean-tags \
-	distdir dvi dvi-am html html-am info info-am install \
-	install-am install-binPROGRAMS install-data install-data-am \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags tags-am uninstall uninstall-am \
-	uninstall-binPROGRAMS
+.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
+	clean-noinstPROGRAMS cscopelist-am ctags ctags-am distclean \
+	distclean-compile distclean-generic distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags tags-am uninstall \
+	uninstall-am
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

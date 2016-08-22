@@ -17,35 +17,48 @@
 
 static const int nsteps = 2000;
 static const double t1 = 20.0;
-static const double scalar = 20.0;
+static const double scalar = 30.0;
 static const double abs_err = 1e-10;
 static const double rel_err = 1e-10;
 static const int nout = 3;
 
+static char * filenames[4] = {"approach.tex", "deg.tex", "sub.tex", "sup.tex"};
+
 double stepinfo(int nsteps, double t[nsteps], double x[nsteps], int flag) {
-	double max = 0;
-	double ts = 0;
-	double osc = 0.0;
+	double max, imax;
+	double xf = x[nsteps - 1];
+	double ts = 0, tp = 0;
+	double tr;
 	int i;
-	int der = 1; //check for change in derivative (the idea being to penalize oscillations)
+	double maxerr = 0;
+	FILE * fd;
 	for (i = 0; i < nsteps; i++) {
-		max = (x[i] > max ? x[i] : max);
-		ts = (fabs(x[i] - 1) > 0.02 ? t[i] : ts);
-		if (flag && !flag) {
-			printf("t=%0.2f\tx(t) = %0.4f\tfabs(x(t)-1)=%0.4f\tts=%0.2f\n",t[i], x[i], fabs(x[i] - 1.0), ts);
-		} else {}
-		if (i > 0) {
-			if ( (der && (x[i] < x[i - 1])) | (!der && (x[i] > x[i-1]))) {
-				der ^= 1;
-				osc += 1.0;
-//				printf("x[%d] = %f, x[%d] = %f, der = %d, osc = %0.0f\n", i,x[i],i-1,x[i-1],der,osc);
-			}
-		}
+		maxerr = ( fabs(x[i] - xf) > maxerr ? fabs(x[i] - xf) : maxerr );
 	}
-	double os = (max > 1 ? max - 1 : 0);
-	if (max > 1000) {return 101.0;}
-	if (flag) {printf("ts,os,osc=[%f,%f,%f]\n",ts,os,osc);}
-	return (ts + os);
+	max = maximum(nsteps,x);
+	double xlo = xf * 0.1;
+	double xhi = xf * 0.9;
+	double tlo = 0, thi = 0;
+	for (i = 0; i < nsteps; i++) {
+		ts = (fabs(x[i] - xf) >= (maxerr * 0.02) ? t[i] : ts);
+		tlo = (x[i] <= xlo ? t[i] : tlo);
+		thi = (x[i] <= xhi ? t[i] : thi);
+		tp = (x[i] >= max ? t[i] : tp);
+	}
+	double os = (max > x[nsteps - 1] ? fmax(0,(max / xf - 1)) : 0);
+	if (max > 1000) {return 101.0;} //kick out divergent solutions
+	tr = thi - tlo;
+	if (flag >= 0) {
+		if (flag == 4) {
+			fd = fopen("/dev/null","w");
+		} else {
+			fd = fopen(filenames[flag], "w");
+		}
+		printf("ts,tr,tp,p,xf,os=[%f,%f,%f,%f,%f,%f]\n",ts,tr,tp,max,xf,100 * os);
+		fprintf(fd,"& %0.2f & %0.2f & %0.2f & %0.3f & %0.2f\\\\\\hline\n",ts,tr,tp,max,xf);
+		fclose(fd);
+	} else {}
+	return (ts + 10 * os);
 }
 
 int f4_dyn(double t, const double y[], double f[],
@@ -116,7 +129,8 @@ double
 generic_fitness_comp(struct Fis * fis,
 		int (* fun)(double t, const double y[], double dydt[], void * params),
 		double C[3],
-		gnuplot_ctrl * h)
+		gnuplot_ctrl * h,
+		int flag)
 {
 	double * u = malloc(sizeof(double));;
 	int nsteps = 100000;
@@ -177,7 +191,7 @@ generic_fitness_comp(struct Fis * fis,
 	gnuplot_plot_xy(force_plot, tt, u_t, nsteps, "Control Force");
 	getchar();
 	gnuplot_close(force_plot);*/
-	return stepinfo(nsteps, tt, y0, 1);
+	return stepinfo(nsteps, tt, y0, flag);
 }
 
 double f4_fitness(struct Fis * fis) {
@@ -235,7 +249,7 @@ double f4_fitness(struct Fis * fis) {
 	}
 	free(u);
 	gsl_odeiv2_driver_free (d);
-	return stepinfo(nsteps, tt, y0, 0);
+	return stepinfo(nsteps, tt, y0, -1);
 }
 
 double PID_fitness(double kp, double ki, double kd,
@@ -281,8 +295,8 @@ double PID_fitness(double kp, double ki, double kd,
 	}
 	free(u);
 	gsl_odeiv2_driver_free (d);
-	gnuplot_plot_xy(h,tt,y0,nsteps,"PID Response");
-	double cost = stepinfo(nsteps, tt, y0, 1);
+	gnuplot_plot_xy(h,tt,y0,nsteps,"PID");
+	double cost = stepinfo(nsteps, tt, y0, 4);
 //	printf("%f\n",cost);
 	return cost;
 }
@@ -344,7 +358,7 @@ void f4_fis_plot(struct Fis * fis) {
 	gnuplot_setstyle(h1,"lines");
 	gnuplot_plot_xy(h1, tt, y0, nsteps, "FIS-controlled response");
 	printf("FIS data:\n");
-	stepinfo(nsteps, tt, y0, 0);
+	stepinfo(nsteps, tt, y0, -1);
 //	printf("PID data:\n");
 //	PID_fitness(5.8, 0.47, 2.85,h1);
 	getchar();
@@ -376,7 +390,7 @@ int main(int argc, char *argv[]) {
 	hp->elite = 0.05;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 200;
+	hp->max_gen = 20;
 
 	FILE * fd = fopen("output.fis", "w");
 	struct Fis * bestfis = run_ga(spcs, hp, f4_fitness, fd);
@@ -388,6 +402,12 @@ int main(int argc, char *argv[]) {
 	double c3[3] = {113.8331814038286, 58.1700091157703, 0.7103463992707};
 	double c4[3] = {74.626865671641795, 12.531572904707232, -0.017962112514351};
 
+
+	char outdir[100];
+	time_t T;
+	time(&T);
+	struct tm * timeinfo = localtime(&T);
+	strftime(outdir,sizeof(outdir),"%H-%M-%S/",timeinfo);
 
 //	f4_fis_plot(bestfis);
 //	fis_print(bestfis,NULL);
@@ -408,23 +428,34 @@ int main(int argc, char *argv[]) {
 	gnuplot_set_xlabel(h2, "Time, s");
 	gnuplot_set_xlabel(h3, "Time, s");
 	gnuplot_set_xlabel(h4, "Time, s");
-	gnuplot_set_ylabel(h1, "Theta, rad");
-	gnuplot_set_ylabel(h2, "Theta, rad");
-	gnuplot_set_ylabel(h3, "Theta, rad");
-	gnuplot_set_ylabel(h4, "Theta, rad");
+	gnuplot_set_ylabel(h1, "Theta, deg");
+	gnuplot_set_ylabel(h2, "Theta, deg");
+	gnuplot_set_ylabel(h3, "Theta, deg");
+	gnuplot_set_ylabel(h4, "Theta, deg");
 	printf("F4 dyn\n");
-	generic_fitness_comp(bestfis, f4_dyn, c1, h1);
+	generic_fitness_comp(bestfis, f4_dyn, c1, h1, 0);
 	PID_fitness(5.8, 0.47, 2.85,f4_dyn, c1,h1);
 	printf("F4 deg50 dyn\n");
-	generic_fitness_comp(bestfis, f4_deg_dyn, c2, h2);
+	generic_fitness_comp(bestfis, f4_deg_dyn, c2, h2, 1);
 	PID_fitness(5.8, 0.47, 2.85,f4_deg_dyn, c2,h2);
 	printf("F4 sub dyn\n");
-	generic_fitness_comp(bestfis, f4_sub_dyn, c3, h3);
+	generic_fitness_comp(bestfis, f4_sub_dyn, c3, h3, 2);
 	PID_fitness(5.8, 0.47, 2.85,f4_sub_dyn, c3,h3);
 	printf("F4 sup dyn\n");
-	generic_fitness_comp(bestfis, f4_sup_dyn, c4, h4);
+	generic_fitness_comp(bestfis, f4_sup_dyn, c4, h4, 3);
 	PID_fitness(5.8, 0.47, 2.85,f4_sup_dyn, c4,h4);
-	getchar();
+	printf("Save plots and lookup tables? (Y/n):\n");
+	char plot = getchar();
+	if (plot == 'n' || plot == 'N') {
+		gnuplot_close(h1);
+		gnuplot_close(h2);
+		gnuplot_close(h3);
+		gnuplot_close(h4);
+		fis_destroy(bestfis);
+		specs_clear(spcs);
+		free(hp);
+		return 0;
+	}
 	gnuplot_cmd(h1, "set terminal postscript color eps");
 	gnuplot_cmd(h2, "set terminal postscript colour eps");
 	gnuplot_cmd(h3, "set terminal postscript colour eps");

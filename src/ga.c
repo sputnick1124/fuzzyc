@@ -543,7 +543,8 @@ blx_a_crossover(
 /* Blended crossover with alpha exploration factor*/
 	double I;
 	double xmin, xmax;
-	double alpha = 0;
+	double new_xmin, new_xmax;
+	double alpha = 0.1;
 	double lambda;
 	int p;
 	for (p = 0; p < num_params - 2; p++) {
@@ -551,12 +552,16 @@ blx_a_crossover(
 		xmax = fmax(parent1[p], parent2[p]);
 		I = xmax - xmin;
 		lambda = drand48();
-		child1[p] = lambda * (xmin - I * alpha) + (1 - lambda) * (xmax + alpha * I);
+		new_xmin = xmin - I * alpha;
+		new_xmin = (new_xmin > 0 ? new_xmin : 0);
+		new_xmax = xmax + I * alpha;
+		new_xmax = ( new_xmax < 1 ? new_xmax : 1);
+		child1[p] = lambda * new_xmin + (1 - lambda) * new_xmax;
+		child2[p] = (1 - lambda) * new_xmin + lambda * new_xmax;
 		if ((child1[p] < 0) | (child1[p] > 1)) {
 			printf("p1,p2,I,c1,L = [%0.4f,%0.4f,%0.4f,%0.4f,%0.4f] \n",parent1[p],parent2[p],I,child1[p],lambda);
 			exit(EXIT_FAILURE);
 		}
-		child2[p] = (1 - lambda) * (xmin - I * alpha) + lambda * (xmax + alpha * I);
 		if ((child2[p] < 0) | (child2[p] > 1)) {
 			printf("p1,p2,I,c2,L = [%0.4f,%0.4f,%0.4f,%0.4f,%0.4f] \n",parent1[p],parent2[p],I,child1[p],lambda);
 			exit(EXIT_FAILURE);
