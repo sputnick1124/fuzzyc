@@ -6,6 +6,9 @@
 #include "fuzzy.h"
 #include "gnuplot_i.h"
 
+const int pi = 3.14159;
+const int scale = 2;
+const int shift = -1;
 
 double
 r_squared(
@@ -42,6 +45,25 @@ fit_line(struct Fis * fis)
     return r_squared(max,y,y_a);
 }
 
+double
+fit_sine(struct Fis * fis)
+{
+    int i;
+    double dx = 0.01;
+    int max = (int) (1.0 / dx);
+	double y[max], y_a[max];
+    double x[1];
+    double out[1];
+    for (i = 0; i < max; i++) {
+        x[0] = (double)i * dx;
+//        x[1] = (double)i * dx;
+        evalfis(out,x,fis);
+		y[i] = sin(x[0] * 4 * pi);
+		y_a[i] = scale * out[0] + shift;
+    }
+    return r_squared(max,y,y_a);
+}
+
 void
 plot_line(struct Fis * fis)
 {
@@ -49,6 +71,7 @@ plot_line(struct Fis * fis)
     double dx = 0.01;
     int max = (int) (1.0 / dx);
     double x[1];
+    double y_a[max];
     double out[1];
 	double y[max], x_i[max];
 
@@ -60,10 +83,15 @@ plot_line(struct Fis * fis)
 //        x[1] = (double)i * dx;
 		x_i[i] = x[0];
         evalfis(out,x,fis);
-		y[i] = out[0];
+		y[i] = scale * out[0] + shift;
+		y_a[i] = sin(x_i[i] * 4 * pi);
+//		y_a[i] = x_i[i];
     }
 	gnuplot_plot_xy(h1, x_i, y, max, "Fuzzy Output");
-	gnuplot_plot_xy(h1, x_i, x_i, max, "Expected Output");
+	gnuplot_plot_xy(h1, x_i, y_a, max, "Expected Output");
+//    gnuplot_cmd(h1, "set terminal postscript color eps");
+//    gnuplot_cmd(h1, "set output \"line.eps\"");
+//    gnuplot_cmd(h1, "replot");
 	printf("Press any key to close window\n");
 	getchar();
 	gnuplot_close(h1);
@@ -77,8 +105,8 @@ main(void)
 	srand48(rand());
 	int num_in = 1;
 	int num_out = 1;
-	int in_mfs[1] = {2};
-	int out_mfs[1] = {2};
+	int in_mfs[1] = {48};
+	int out_mfs[1] = {48};
 	struct Specs * spcs = specs_set(num_in, in_mfs, num_out, out_mfs);
 	struct HyperParams * hp = malloc(sizeof(struct HyperParams));
 
@@ -86,9 +114,9 @@ main(void)
 	hp->elite = 0.05;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 100;
+	hp->max_gen = 10000;
 
-	struct Fis * bestfis = run_ga(spcs, hp, fit_line, NULL);
+	struct Fis * bestfis = run_ga(spcs, hp, fit_sine, NULL);
 
 	int r;
 	for (r = 0; r < spcs->num_rule; r++) {

@@ -15,12 +15,13 @@
 
 //#define FUZZY
 
-static const int nsteps = 2000;
-static const double t1 = 20.0;
-static const double scalar = 30.0;
+static const int nsteps = 5000;
+static const double t1 = 15.0;
+static const double scalar = 5.0;
 static const double abs_err = 1e-10;
 static const double rel_err = 1e-10;
 static const int nout = 3;
+static const double ep_i = 1.0;
 
 static char * filenames[4] = {"approach.tex", "deg.tex", "sub.tex", "sup.tex"};
 
@@ -55,10 +56,16 @@ double stepinfo(int nsteps, double t[nsteps], double x[nsteps], int flag) {
 			fd = fopen(filenames[flag], "w");
 		}
 		printf("ts,tr,tp,p,xf,os=[%f,%f,%f,%f,%f,%f]\n",ts,tr,tp,max,xf,100 * os);
-		fprintf(fd,"& %0.2f & %0.2f & %0.2f & %0.3f & %0.2f\\\\\\hline\n",ts,tr,tp,max,xf);
+		fprintf(fd,"& %0.2f & %0.2f & %0.2f & %0.3f & %0.2f\\\\\\cline{2-6}\n",ts,tr,tp,max,xf);
 		fclose(fd);
 	} else {}
-	return (ts + 10 * os);
+//	return (ts + 2*os + tr + tp);
+//    return ts;
+    int S = 0;
+    for (i = 0; i < nsteps; i++) {
+        S += x[i]>1 ? x[i] : 0;
+    }
+    return S;
 }
 
 int f4_dyn(double t, const double y[], double f[],
@@ -133,7 +140,7 @@ generic_fitness_comp(struct Fis * fis,
 		int flag)
 {
 	double * u = malloc(sizeof(double));;
-	int nsteps = 100000;
+//	int nsteps = 100000;
 	gsl_odeiv2_system f4 = {fun, NULL, 5, &u};
 
 
@@ -148,7 +155,7 @@ generic_fitness_comp(struct Fis * fis,
 	double kp, ki, kd;
 	double ep[nsteps], ei[nsteps], ed[nsteps];
 	double e[3], out[nout];
-	ep[0] = 1; ei[0] = 0; ed[0] = 0;
+	ep[0] = ep_i; ei[0] = 0; ed[0] = 0;
 
 	tt[0] = 0; y0[0] = 0;
 	u[0] = 0;
@@ -211,7 +218,7 @@ double f4_fitness(struct Fis * fis) {
 	double kp, ki, kd;
 	double ep[nsteps], ei[nsteps], ed[nsteps];
 	double e[3], out[nout];
-	ep[0] = 1; ei[0] = 0; ed[0] = 0;
+	ep[0] = ep_i; ei[0] = 0; ed[0] = 0;
 
 	tt[0] = 0; y0[0] = 0;
 	u[0] = 0;
@@ -263,14 +270,14 @@ double PID_fitness(double kp, double ki, double kd,
 
 	gsl_odeiv2_driver * d =
 		gsl_odeiv2_driver_alloc_y_new(&f4, gsl_odeiv2_step_rk8pd,
-									abs_err, rel_err, 0.0);
+									1e-2, abs_err, rel_err);
 
 	int i;
 	double t = 0.0;
 	double y[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 	double tt[nsteps], y0[nsteps];
 	double ep[nsteps], ei[nsteps], ed[nsteps];
-	ep[0] = 1; ei[0] = 0; ed[0] = 0;
+	ep[0] = ep_i; ei[0] = 0; ed[0] = 0;
 	u[0] = 0;
 	tt[0] = 0; y0[0] = 0;
 	u[0] = 0;
@@ -309,7 +316,7 @@ void f4_fis_plot(struct Fis * fis) {
 
 	gsl_odeiv2_driver * d =
 		gsl_odeiv2_driver_alloc_y_new(&f4, gsl_odeiv2_step_rk8pd,
-									1e-3, 1e-3, 0.0);
+									1e-2, 1e-3, 1e-3);
 
 	int i;
 	double t = 0.0;
@@ -318,7 +325,7 @@ void f4_fis_plot(struct Fis * fis) {
 	double kp, ki, kd;
 	double ep[nsteps], ei[nsteps], ed[nsteps];
 	double e[3], out[nout];
-	ep[0] = 1; ei[0] = 0; ed[0] = 0;
+	ep[0] = ep_i; ei[0] = 0; ed[0] = 0;
 
 	tt[0] = 0; y0[0] = 0;
 	u[0] = 0;
@@ -373,14 +380,14 @@ int main(int argc, char *argv[]) {
 	srand((long long int)time(NULL));
 	srand48(rand());
 	int num_in = 3;
-	int in_mfs[3] = {3,3,3};
+	int in_mfs[3] = {5,5,5};
 	#ifndef FUZZY
 	int num_out = 3;
-	int out_mfs[3] = {3,3,3};
+	int out_mfs[3] = {5,5,5};
 	#endif
 	#ifdef FUZZY
 	int num_out = 1;
-	int out_mfs[1] = {3};
+	int out_mfs[1] = {7};
 	#endif
 
 	struct Specs * spcs = specs_set(num_in, in_mfs, num_out, out_mfs);
@@ -390,7 +397,7 @@ int main(int argc, char *argv[]) {
 	hp->elite = 0.05;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 20;
+	hp->max_gen = 200;
 
 	FILE * fd = fopen("output.fis", "w");
 	struct Fis * bestfis = run_ga(spcs, hp, f4_fitness, fd);
@@ -424,6 +431,26 @@ int main(int argc, char *argv[]) {
 	gnuplot_setstyle(h2,"lines");
 	gnuplot_setstyle(h3,"lines");
 	gnuplot_setstyle(h4,"lines");
+	gnuplot_cmd(h1,"set xlabel font 'Verdana,20'");
+	gnuplot_cmd(h2,"set xlabel font 'Verdana,20'");
+	gnuplot_cmd(h3,"set xlabel font 'Verdana,20'");
+	gnuplot_cmd(h4,"set xlabel font 'Verdana,20'");
+	gnuplot_cmd(h1,"set ylabel font 'Verdana,20'");
+	gnuplot_cmd(h2,"set ylabel font 'Verdana,20'");
+	gnuplot_cmd(h3,"set ylabel font 'Verdana,20'");
+	gnuplot_cmd(h4,"set ylabel font 'Verdana,20'");
+	gnuplot_cmd(h1,"set xtics font 'Verdana,20'");
+	gnuplot_cmd(h2,"set xtics font 'Verdana,20'");
+	gnuplot_cmd(h3,"set xtics font 'Verdana,20'");
+	gnuplot_cmd(h4,"set xtics font 'Verdana,20'");
+	gnuplot_cmd(h1,"set ytics font 'Verdana,20'");
+	gnuplot_cmd(h2,"set ytics font 'Verdana,20'");
+	gnuplot_cmd(h3,"set ytics font 'Verdana,20'");
+	gnuplot_cmd(h4,"set ytics font 'Verdana,20'");
+	gnuplot_cmd(h1,"set key font 'Verdana,20'");
+	gnuplot_cmd(h2,"set key font 'Verdana,20'");
+	gnuplot_cmd(h3,"set key font 'Verdana,20'");
+	gnuplot_cmd(h4,"set key font 'Verdana,20'");
 	gnuplot_set_xlabel(h1, "Time, s");
 	gnuplot_set_xlabel(h2, "Time, s");
 	gnuplot_set_xlabel(h3, "Time, s");
@@ -474,6 +501,7 @@ int main(int argc, char *argv[]) {
 	gnuplot_close(h4);
 
 	/*Generate lookup tables for MATLAB*/
+	/*
 	#ifndef FUZZY
 	double i, j, k;
 	int in, out;
@@ -505,6 +533,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	#endif
+	*/
 
 	fis_destroy(bestfis);
 	specs_clear(spcs);

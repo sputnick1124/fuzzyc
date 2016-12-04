@@ -70,6 +70,8 @@ individual_to_fis(
 
 typedef double (*fitness_fcn)(struct Fis * fis);
 
+typedef double (*fitness_fcn_cascade)(int num, struct Fis ** fis);
+
 int sum_i(int adds[], size_t len);
 
 double sum_d(double adds[], size_t len);
@@ -232,11 +234,31 @@ population_rank(
 	double (*fitness_fcn)(struct Fis * fis),
 	double *fit_min);
 
+void
+population_rank_cascade(
+	int num,
+	int ** rank,
+	struct Individual ** populations[num],
+	struct Specs * spcs[num],
+	double (*fitness_fcn_cascade)(int num, struct Fis ** fis_list),
+	double *fit_min);
+
+
 struct Fis *
 run_ga(
     struct Specs * spcs,
     struct HyperParams * hp,
     fitness_fcn fit_fcn,
+	FILE * fis_log);
+
+void
+run_cascade_ga(
+	struct Fis ** fis_list,
+	int num,
+	struct Specs ** spcs,
+	struct HyperParams ** hp,
+	fitness_fcn_cascade fit_fcn,
+	int max_gen,
 	FILE * fis_log);
 
 #endif
