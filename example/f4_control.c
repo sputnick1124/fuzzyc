@@ -64,7 +64,7 @@ double stepinfo(int nsteps, double t[nsteps], double x[nsteps], int flag) {
     int S = 0;
     for (i = 0; i < nsteps; i++) {
         S += x[i]>1 ? x[i] : 0;
-    }
+   }
     return S;
 }
 

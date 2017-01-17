@@ -31,7 +31,7 @@
 #include <stdio.h>
 
 /** Maximal number of simultaneous temporary files */
-#define GP_MAX_TMP_FILES    64
+#define GP_MAX_TMP_FILES    1000
 
 /*---------------------------------------------------------------------------
                                 New Types

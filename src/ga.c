@@ -978,7 +978,10 @@ run_ga(
 		population_rank(hp->pop_size, rank, pop1, spcs, fit_fcn, &fitness_hist[gen]);
 		printf("Ind[%d] Fitness: %f\n",rank[0],fitness_hist[gen]);
 //		individual_print(pop1[rank[0]], ga_log);
-		if ( (gen > 10) && (fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) ) {
+        int stag =50;
+//        printf("rolling average= %f, current fitness=%f\n",sum_d(&fitness_hist[gen-stag],stag)/(double)stag,fitness_hist[gen]);
+//		if ( (gen > stag) && (fabs(sum_d(&fitness_hist[gen - stag], stag)/(double)stag - fitness_hist[gen]) < 1e-7) ) {
+		if ( fitness_hist[gen] < 6.15 ) {
 			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
 			printf("Best fitness:%f\n",fit_fcn(ret_fis));
 			individual_print(pop1[rank[0]], spcs, fis_log);
@@ -996,6 +999,8 @@ run_ga(
 	}
 	individual_print(pop1[rank[0]], spcs, fis_log);
 	struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
+    printf("Best fitness:%f\n",fit_fcn(ret_fis));
+	printf("%d Generations\n",gen);
 	individuals_destroy(pop1, hp->pop_size);
 	individuals_destroy(pop2, hp->pop_size);
 	free(pop1);
@@ -1132,12 +1137,12 @@ individual_print(struct Individual * ind, struct Specs * spcs, FILE * fd)
 		spcs->rules,
 		ind->consequents);
 
-	fprintf(fd, "num_in: %d\tin_mfs: {",spcs->num_in);
+	fprintf(fd, "num_in: {%d}\nin_mfs: {",spcs->num_in);
 	for (in = 0; in < spcs->num_in; in++) {
 		fprintf(fd, "%d ", spcs->in_mfs[in]);
 	}
 
-	fprintf(fd, "}\nnum_out: %d\tout_mfs: {",spcs->num_out);
+	fprintf(fd, "}\nnum_out: {%d}\nout_mfs: {",spcs->num_out);
 	for (out = 0; out < spcs->num_out; out++) {
 		fprintf(fd, "%d ", spcs->out_mfs[out]);
 	}
