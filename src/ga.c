@@ -87,7 +87,7 @@ cmpdouble_p(const void *pp1, const void *pp2)
 
 struct Specs *
 specs_set(
-	int num_in,
+    int num_in,
     int in_mfs[],
     int num_out,
     int out_mfs[])
@@ -285,6 +285,8 @@ individuals_destroy(struct Individual ** inds, int num_ind)
 
 void
 init_partition(double params[], int num_sets) {
+    /*Everything assumes a normalized partition on [0,1]. This evenly divides
+    th partition into num_sets divisions and places mfs in it with ramps at the ends.*/
 	int p;
 	int num_params = num_sets * 3;
 	params[0] = 0; params[1] = 0; //Set lower bounds
@@ -305,6 +307,9 @@ init_partition(double params[], int num_sets) {
 void
 rand_partition(double params[], int num_sets)
 {
+    /*Divides the partition the same as init_partition, but considers the even
+    divisions as buckets within which to place the mf params randomly. This is
+    coverage is guaranteed because there will always be overlap (at least at creation).*/
 	int p;
 	double r;
 	int num_params = num_sets * 3;
@@ -382,6 +387,10 @@ init_antecedents(
     int *rules,
     int in_mfs[])
 {
+    /*The whole idea here is to mimic a rotary counting mechanism, but we can't
+    make the assumption that the counter is in decimal. In fact, each digit may be
+    in its own number base, so we have to keep track of each digit place and
+    increment appropriately*/
     int in, rule;
     unsigned int flag = 0;
     int num_rule = 1;
@@ -494,7 +503,7 @@ tp_crossover(
 	double parent2[])
 {
 /* Two-point crossover*/
-	int i = 2 + rand_i(num_params - 2);
+	int i = 2 + rand_i(num_params - 4);
 	int j = (i < num_params - 2 ? i + rand_i(num_params - 2 - i) : i);
 	int p;
 	for (p = 0; p <= j; p++) {
@@ -545,10 +554,10 @@ blx_a_crossover(
 	double I;
 	double xmin, xmax;
 	double new_xmin, new_xmax;
-	double alpha = 0.1;
+	double alpha = 0;
 	double lambda;
 	int p;
-	for (p = 0; p < num_params - 2; p++) {
+	for (p = 2; p < num_params - 2; p++) {
 		xmin = fmin(parent1[p], parent2[p]);
 		xmax = fmax(parent1[p], parent2[p]);
 		I = xmax - xmin;
@@ -568,6 +577,10 @@ blx_a_crossover(
 			exit(EXIT_FAILURE);
 		}
 	}
+	child1[0] = parent1[0];
+	child1[1] = parent1[1];
+	child2[0] = parent2[0];
+	child2[1] = parent2[1];
 	child1[num_params-2] = parent1[num_params-2];
 	child1[num_params-1] = parent1[num_params-1];
 	child2[num_params-2] = parent2[num_params-2];
@@ -980,8 +993,8 @@ run_ga(
 //		individual_print(pop1[rank[0]], ga_log);
         int stag =50;
 //        printf("rolling average= %f, current fitness=%f\n",sum_d(&fitness_hist[gen-stag],stag)/(double)stag,fitness_hist[gen]);
-//		if ( (gen > stag) && (fabs(sum_d(&fitness_hist[gen - stag], stag)/(double)stag - fitness_hist[gen]) < 1e-7) ) {
-		if ( fitness_hist[gen] < 6.15 ) {
+		if ( (gen > stag) && (fabs(sum_d(&fitness_hist[gen - stag], stag)/(double)stag - fitness_hist[gen]) < 1e-7) ) {
+//		if ( fitness_hist[gen] < 6.15 ) {
 			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
 			printf("Best fitness:%f\n",fit_fcn(ret_fis));
 			individual_print(pop1[rank[0]], spcs, fis_log);

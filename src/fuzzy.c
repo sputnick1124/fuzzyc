@@ -8,9 +8,9 @@
 
 double minimum(int n_val, double values[n_val]) {
 	/*Find minimum value in an array of doubles*/
-	double min = HUGE_VAL;
+	double min = values[0];
 	int i;
-	for (i = 0; i < n_val; i++) {
+	for (i = 1; i < n_val; i++) {
 		min = (values[i] < min ? values[i] : min);
 	}
 	return min;
@@ -18,16 +18,18 @@ double minimum(int n_val, double values[n_val]) {
 
 double maximum(int n_val, double values[n_val]) {
 	/*Find maximum value in an array of doubles*/
-	double max = 0;
+	double max = values[0];
 	int i;
-	for (i = 0; i < n_val; i++) {
+	for (i = 1; i < n_val; i++) {
 		max = (values[i] > max ? values[i] : max);
 	}
 	return max;
 }
 
 double inTriMF(double params[3], double x) {
-	/**/
+	/*Triangular membership function for inputs
+	A triangle is defined by its three points, [a,x*,b] which
+	are passed in the params array. x is the evaluation point*/
 	double a = params[0];
 	double x_star = params[1];
 	double b = params[2];
@@ -35,7 +37,7 @@ double inTriMF(double params[3], double x) {
 	#ifdef DEBUG
 	printf("inTriMF: x = %0.2f\n",x);
 	#endif
-	if (a != x_star) {
+	if (a != x_star) {//not a descending ramp
 		m1 = 1 / (x_star - a);
 		b1 = -m1 * a;
 	} else {
@@ -43,7 +45,7 @@ double inTriMF(double params[3], double x) {
 		b1 = 0;
 	}
 
-	if (b != x_star) {
+	if (b != x_star) {//not an ascending ramp
 		m2 = -1 / (b - x_star);
 		b2 = 1 - (m2 * x_star);
 	} else {
@@ -51,7 +53,7 @@ double inTriMF(double params[3], double x) {
 		b2 = 0;
 	}
 
-	if (x > b) {
+	if (x > b) {//saturation function. cannot exceed bounds
 		x = b;
 	} else if (x < a) {
 		x = a;
@@ -67,6 +69,12 @@ double inTriMF(double params[3], double x) {
 }
 
 void outTriMF(double x[][4], double * params[], int num_out, double y) {
+	/*Triangular membership function for outputs
+	The return value is a trapezoid	for each of the outputs in the system.
+	Each trapezoid is a truncated triangle resulting from cutting the peak
+	of the triangle at a height of y. This function merely inverts the
+	equations of the triangles slopes and finds the x values which would
+	copmute the y given.*/
 	int o;
 //	for (i = 0; i < num_out; i++) {
 //		x[i] = malloc(sizeof(double));
@@ -76,6 +84,13 @@ void outTriMF(double x[][4], double * params[], int num_out, double y) {
 		double x_star = params[o][1];
 		double b = params[o][2];
 		double m1, b1, m2, b2;
+		if (y == 0) {
+			x[o][0] = a;
+			x[o][1] = a;
+			x[o][2] = b;
+			x[o][3] = b;
+			continue;
+		}
 		if (a != x_star) {
 			m1 = 1 / (x_star - a);
 			b1 = -m1 * a;
@@ -91,7 +106,8 @@ void outTriMF(double x[][4], double * params[], int num_out, double y) {
 			m2 = 0;
 			b2 = 0;
 		}
-
+		// a and b stay the same
+		// check for division by 0 for x1 and x2
 		x[o][0] = a;
 		x[o][1] = (m1 ? ((y - b1) / m1) : a);
 		x[o][2] = (m2 ? ((y - b2) / m2) : b);
@@ -214,11 +230,18 @@ void defuzzMeanOfCent(double out[],
 }
 
 struct Rule *create_rule(double input[][3], int num_in, double output[][3], int num_out) {
+    /*Essentially just matching a set of input mfs to a set of output mfs. No explicit
+    Mamdani AND/OR ops here, but everything is implicitly ANDed together in evalrules.
+    We might need to consider other way of doinf this down the road.*/
     int i, p;
     struct Rule *rule = malloc(sizeof(struct Rule));
     assert(rule != NULL);
 
-	rule->input = malloc(num_in * sizeof(double *));
+    rule->input = malloc(num_in * sizeof(double *));
+    if (rule->input == NULL) {
+        free(rule);
+        return NULL;
+    }
 
     rule->num_in = num_in;
     for (i = 0; i < num_in; i ++) {
@@ -348,7 +371,7 @@ evalrules(
 	#endif
 	for (r = 0; r < num_rule; r++) {
 		#ifdef DEBUG
-		print_rule(rules[r]);
+		print_rule(rules[r],stdout);
 		#endif
 		for (in = 0; in < rules[r]->num_in; in++) {
 			s_temp[in] = inTriMF(rules[r]->input[in], x[in]);
@@ -362,11 +385,12 @@ evalrules(
 					s_temp[in]);
 			#endif
 		}
+		//this is where mamdani AND comes into play
 		firing_strengths[r] = minimum(rules[r]->num_in,s_temp);
 		outTriMF(out_vals[r],
-				 rules[r]->output,
-				 rules[0]->num_out,
-				 firing_strengths[r]);
+			 rules[r]->output,
+			 rules[0]->num_out,
+			 firing_strengths[r]);
 		#ifdef DEBUG
 		int d, o;
 		printf("firing_strength = min(inTriMF(x)) = %0.2f\n",firing_strengths[r]);
@@ -408,7 +432,12 @@ void get_fis(struct Rule ** rule_list,
 	int rules[num_rule][num_in + num_out],
 	int in_mfs[],
 	int out_mfs[]) {
-
+	/*Convenience function to fill out a Rule struct from a bunch of arrays. Once we
+	have a rulebase, that is essentially all the Fis is, so this function is just a
+	helper to create a Fis struct. What is happening here is walking through the rules
+	array and matching up the ith, jth, kth, etc input mfs to the mth, nth, etc output mfs.
+	In practice, this led to some really ugly code which is difficult to decipher. A rewrite
+	is in order.*/
 	int in, out, rule;
 	int pin, pout;
 
