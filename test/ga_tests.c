@@ -7,18 +7,19 @@
 
 int test_chromo(int num_params, double chromo[]) {
 	int p;
+	int pass = 1;
 	for (p = 2; p < num_params; p += 3) {
 		if (chromo[p-2] > chromo[p-1]) {
 //			printf("chromo[%d-2] > chromo[%d-1]\n",p,p);
-			return 0;
+			pass = 0;
 		} else if ( chromo[p-1] > chromo[p]) {
 //			printf("chromo[%d-1] > chromo[%d]\n",p,p);
-			return 0;
-		} else {
-			return 1;
+			pass = 0;
+		} else if ( chromo[p] < chromo[p+1]) {
+			pass = 0;
 		}
 	}
-	return 1;
+	return pass;
 }
 
 int test_consequents(int num_out, int num_rule, int consequents[], int out_mfs[]) {
