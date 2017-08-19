@@ -15,3 +15,6 @@ ga.o: ga.c fuzzy.o
 fuzzy.o: fuzzy.c
 	gcc $CFLAGS -o fuzzy.o -c fuzzy.c $LDFLAGS
 
+fis_utils.o: fis_utils.c
+	gcc $CFLAGS -o fis_utils.o -c fis_utils.c $LDFLAGS
+

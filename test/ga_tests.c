@@ -11,12 +11,12 @@ int test_chromo(int num_params, double chromo[]) {
 	for (p = 2; p < num_params; p += 3) {
 		if (chromo[p-2] > chromo[p-1]) {
 //			printf("chromo[%d-2] > chromo[%d-1]\n",p,p);
-			pass = 0;
+			return 0;
 		} else if ( chromo[p-1] > chromo[p]) {
 //			printf("chromo[%d-1] > chromo[%d]\n",p,p);
-			pass = 0;
-		} else if ( chromo[p] < chromo[p+1]) {
-			pass = 0;
+			return 0;
+		} else {//else if ( chromo[p] < chromo[p+1]) {
+			return 1;//	pass = 0;
 		}
 	}
 	return pass;
