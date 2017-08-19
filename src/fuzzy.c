@@ -60,10 +60,19 @@ double inTriMF(double params[3], double x) {
 	}
 
 	if (x < x_star) {
+        #ifdef DEBUG
+        printf("inTriMF: x(%0.2f) < x_star(%0.2f)\n",x,x_star);
+        #endif
 		return fmax((m1 * x) + b1, 0);
 	} else if ( x > x_star) {
+        #ifdef DEBUG
+        printf("inTriMF: x(%0.2f) > x_star(%0.2f)\n",x,x_star);
+        #endif
 		return fmax((m2 * x) + b2, 0);
 	} else {
+        #ifdef DEBUG
+        printf("inTriMF: x(%0.2f) = x_star(%0.2f)\n",x,x_star);
+        #endif
 		return 1;
 	}
 }

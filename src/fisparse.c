@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <yaml.h>
 
-#include "../include/fuzzy.h"
+#include "fuzzy.h"
 
 int main(int argc, char *argv[]) {
 	char * file = argv[1];
@@ -12,9 +12,11 @@ int main(int argc, char *argv[]) {
 	/* Initialize parser */
 	if(!yaml_parser_initialize(&parser)) {
 		fputs("Failed to initialize parser\n", stderr);
+        return 1;
 	}
 	if(fh == NULL) {
 		fputs("Failed to open file\n",stderr);
+        return 1;
 	}
 
 	/* Set input file */

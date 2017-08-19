@@ -993,7 +993,7 @@ run_ga(
 //		individual_print(pop1[rank[0]], ga_log);
         int stag =50;
 //        printf("rolling average= %f, current fitness=%f\n",sum_d(&fitness_hist[gen-stag],stag)/(double)stag,fitness_hist[gen]);
-		if ( (gen > stag) && (fabs(sum_d(&fitness_hist[gen - stag], stag)/(double)stag - fitness_hist[gen]) < 1e-7) ) {
+		if ( (gen > stag) && (fabs(sum_d(&fitness_hist[gen - stag], stag)/(double)stag - fitness_hist[gen]) < 1e-7)) {
 //		if ( fitness_hist[gen] < 6.15 ) {
 			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
 			printf("Best fitness:%f\n",fit_fcn(ret_fis));
