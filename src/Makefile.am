@@ -10,11 +10,11 @@ AM_LDFLAGS = -lm
 
 
 ga.o: ga.c fuzzy.o
-	gcc $CFLAGS -o ga.o fuzzy.o -c ga.c $LDFLAGS
+	gcc ${CFLAGS} -o ga.o fuzzy.o -c ga.c ${LDFLAGS}
 
 fuzzy.o: fuzzy.c
-	gcc $CFLAGS -o fuzzy.o -c fuzzy.c $LDFLAGS
+	gcc ${CFLAGS} -o fuzzy.o -c fuzzy.c ${LDFLAGS}
 
 fis_utils.o: fis_utils.c
-	gcc $CFLAGS -o fis_utils.o -c fis_utils.c $LDFLAGS
+	gcc ${CFLAGS} -o fis_utils.o -c fis_utils.c ${LDFLAGS}
 
