@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include "fuzzy.h"
+#include "debug.h"
 
 double minimum(int n_val, double values[n_val]) {
 	/*Find minimum value in an array of doubles*/
@@ -385,6 +386,7 @@ evalrules(
 		for (in = 0; in < rules[r]->num_in; in++) {
 			s_temp[in] = inTriMF(rules[r]->input[in], x[in]);
 			#ifdef DEBUG
+			printf("in = %d, rules->num_in = %d, x[in] = %f\n", in, rules[r]->num_in, x[in]);
 			printf("evalfis: x[%d] = %0.2f\n",in,x[in]);
 			printf("inTriMF([%0.2f, %0.2f, %0.2f], %0.2f) = %0.2f\n",
 					rules[r]->input[in][0],

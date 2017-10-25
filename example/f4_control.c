@@ -12,9 +12,9 @@
 #include "fuzzy.h"
 #include "ga.h"
 #include "gnuplot_i.h"
+#include "debug.h"
 
 //#define FUZZY
-
 static const int nsteps = 5000;
 static const double t1 = 15.0;
 static const double scalar = 5.0;
@@ -133,7 +133,7 @@ int f4_sup_dyn(double t, const double y[], double f[],
 }
 
 double
-generic_fitness_comp(struct Fis * fis,
+generic_fitness_comp(int num_fis, struct Fis * fis[num_fis],
 		int (* fun)(double t, const double y[], double dydt[], void * params),
 		double C[3],
 		gnuplot_ctrl * h,
@@ -148,7 +148,7 @@ generic_fitness_comp(struct Fis * fis,
 		gsl_odeiv2_driver_alloc_y_new(&f4, gsl_odeiv2_step_rk8pd,
 									abs_err, rel_err, 0.0);
 
-	int i;
+	int i, fisc;
 	double t = 0.0;
 	double y[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 	double tt[nsteps], y0[nsteps], u_t[nsteps];
@@ -156,6 +156,11 @@ generic_fitness_comp(struct Fis * fis,
 	double ep[nsteps], ei[nsteps], ed[nsteps];
 	double e[3], out[nout];
 	ep[0] = ep_i; ei[0] = 0; ed[0] = 0;
+	#ifdef DEBUG
+	for (fisc = 0; fisc < num_fis; fisc++) {
+		fis_print(fis[fisc], NULL);
+	}
+	#endif
 
 	tt[0] = 0; y0[0] = 0;
 	u[0] = 0;
@@ -179,7 +184,9 @@ generic_fitness_comp(struct Fis * fis,
 		e[0] = (ep[i] + scalar / 2.0) / scalar;
 		e[1] = (ei[i] + scalar / 2.0) / scalar;
 		e[2] = (ed[i] + scalar / 2.0) / scalar;
-		evalfis(out,e,fis);
+		for (fisc = 0; fisc < num_fis; fisc++) {
+			evalfis(&out[fisc],&e[fisc],fis[fisc]);
+		}
 		#ifdef FUZZY
 		u[0] = out[0] * 10 - 5; //If single output FIS directly controls force
 		#endif
@@ -201,7 +208,7 @@ generic_fitness_comp(struct Fis * fis,
 	return stepinfo(nsteps, tt, y0, flag);
 }
 
-double f4_fitness(struct Fis * fis) {
+double f4_fitness(int num_fis, struct Fis * fis[num_fis]) {
 	double * u = malloc(sizeof(double));;
 
 	gsl_odeiv2_system f4 = {f4_dyn, NULL, 5, &u};
@@ -211,7 +218,7 @@ double f4_fitness(struct Fis * fis) {
 		gsl_odeiv2_driver_alloc_y_new(&f4, gsl_odeiv2_step_rk8pd,
 									abs_err, rel_err, 0.0);
 
-	int i;
+	int i, fisc;
 	double t = 0.0;
 	double y[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 	double tt[nsteps], y0[nsteps];
@@ -219,6 +226,11 @@ double f4_fitness(struct Fis * fis) {
 	double ep[nsteps], ei[nsteps], ed[nsteps];
 	double e[3], out[nout];
 	ep[0] = ep_i; ei[0] = 0; ed[0] = 0;
+	#ifdef DEBUG
+	for (fisc = 0; fisc < num_fis; fisc++) {
+		fis_print(fis[fisc], stdout);
+	}
+	#endif
 
 	tt[0] = 0; y0[0] = 0;
 	u[0] = 0;
@@ -245,7 +257,9 @@ double f4_fitness(struct Fis * fis) {
 		e[0] = (ep[i] + scalar / 2.0) / scalar;
 		e[1] = (ei[i] + scalar / 2.0) / scalar;
 		e[2] = (ed[i] + scalar / 2.0) / scalar;
-		evalfis(out,e,fis);
+		for (fisc = 0; fisc < num_fis; fisc++) {
+			evalfis(&out[fisc],&e[fisc],fis[fisc]);
+		}
 		#ifdef FUZZY
 		u[0] = out[0] * 10 - 5; //If single output FIS directly controls force
 		#endif
@@ -257,7 +271,7 @@ double f4_fitness(struct Fis * fis) {
 	free(u);
 	gsl_odeiv2_driver_free (d);
 	return stepinfo(nsteps, tt, y0, -1);
-}
+	}
 
 double PID_fitness(double kp, double ki, double kd,
 		int (* fun)(double t, const double y[], double dydt[], void * params),
@@ -308,7 +322,7 @@ double PID_fitness(double kp, double ki, double kd,
 	return cost;
 }
 
-void f4_fis_plot(struct Fis * fis) {
+void f4_fis_plot(int num_fis, struct Fis * fis[num_fis]) {
 	double * u = malloc(sizeof(double));;
 
 	gsl_odeiv2_system f4 = {f4_dyn, NULL, 5, &u};
@@ -318,7 +332,7 @@ void f4_fis_plot(struct Fis * fis) {
 		gsl_odeiv2_driver_alloc_y_new(&f4, gsl_odeiv2_step_rk8pd,
 									1e-2, 1e-3, 1e-3);
 
-	int i;
+	int i, fisc;
 	double t = 0.0;
 	double y[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 	double tt[nsteps], y0[nsteps];
@@ -329,6 +343,9 @@ void f4_fis_plot(struct Fis * fis) {
 
 	tt[0] = 0; y0[0] = 0;
 	u[0] = 0;
+	for (fisc = 0; fisc < num_fis; fisc++) {
+		fis_print(fis[fisc], stdout);
+	}
 
 	for (i = 1; i < nsteps; i++) {
 		double ti = i * t1 / nsteps;
@@ -349,7 +366,9 @@ void f4_fis_plot(struct Fis * fis) {
 		e[0] = (ep[i] + scalar / 2.0) / scalar;
 		e[1] = (ei[i] + scalar / 2.0) / scalar;
 		e[2] = (ed[i] + scalar / 2.0) / scalar;
-		evalfis(out,e,fis);
+		for (fisc = 0; fisc < num_fis; fisc++) {
+			evalfis(&out[fisc],&e[fisc],fis[fisc]);
+		}
 		#ifdef FUZZY
 		u[0] = out[0] * 10 - 5; //If single output FIS directly controls force
 		#endif
@@ -379,28 +398,34 @@ void f4_fis_plot(struct Fis * fis) {
 int main(int argc, char *argv[]) {
 	srand((long long int)time(NULL));
 	srand48(rand());
-	int num_in = 3;
-	int in_mfs[3] = {5,5,5};
-	#ifndef FUZZY
-	int num_out = 3;
-	int out_mfs[3] = {5,5,5};
-	#endif
-	#ifdef FUZZY
+	int i;
+	int num_fis = 3;
+	int num_in = 1;
+	int in_mfs[3] = {3,3,3};
+//	#ifndef FUZZY
+//	int num_out = 3;
+//	int out_mfs[3] = {5,5,5};
+//	#endif
+//	#ifdef FUZZY
 	int num_out = 1;
-	int out_mfs[1] = {7};
-	#endif
+	int out_mfs[1] = {3};
+//	#endif
 
-	struct Specs * spcs = specs_set(num_in, in_mfs, num_out, out_mfs);
+	struct Specs ** spcs = malloc(sizeof(struct Specs*) * num_fis);
+	struct Fis ** bestfis = malloc(sizeof(struct Fis*) * num_fis);
+	for (i = 0; i < num_fis; i++) {
+		spcs[i] = specs_set(num_in, in_mfs, num_out, out_mfs);
+	}
 	struct HyperParams * hp = malloc(sizeof(struct HyperParams));
 
-	hp->pop_size = 100;
+	hp->pop_size = 11;
 	hp->elite = 0.05;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 200;
+	hp->max_gen = 5;
 
 	FILE * fd = fopen("output.fis", "w");
-	struct Fis * bestfis = run_ga(spcs, hp, f4_fitness, fd);
+	run_cascade_ga(num_fis, bestfis, spcs, hp, f4_fitness, fd);
 	fclose(fd);
 
 /** Plot the comparison graphs between PID- and Fuzzy-controlled systems**/
@@ -418,7 +443,7 @@ int main(int argc, char *argv[]) {
 
 //	f4_fis_plot(bestfis);
 //	fis_print(bestfis,NULL);
-
+/*
 	gnuplot_ctrl * h1;
 	gnuplot_ctrl * h2;
 	gnuplot_ctrl * h3;
@@ -460,16 +485,16 @@ int main(int argc, char *argv[]) {
 	gnuplot_set_ylabel(h3, "Theta, deg");
 	gnuplot_set_ylabel(h4, "Theta, deg");
 	printf("F4 dyn\n");
-	generic_fitness_comp(bestfis, f4_dyn, c1, h1, 0);
+	generic_fitness_comp(num_fis, bestfis, f4_dyn, c1, h1, 0);
 	PID_fitness(5.8, 0.47, 2.85,f4_dyn, c1,h1);
 	printf("F4 deg50 dyn\n");
-	generic_fitness_comp(bestfis, f4_deg_dyn, c2, h2, 1);
+	generic_fitness_comp(num_fis, bestfis, f4_deg_dyn, c2, h2, 1);
 	PID_fitness(5.8, 0.47, 2.85,f4_deg_dyn, c2,h2);
 	printf("F4 sub dyn\n");
-	generic_fitness_comp(bestfis, f4_sub_dyn, c3, h3, 2);
+	generic_fitness_comp(num_fis, bestfis, f4_sub_dyn, c3, h3, 2);
 	PID_fitness(5.8, 0.47, 2.85,f4_sub_dyn, c3,h3);
 	printf("F4 sup dyn\n");
-	generic_fitness_comp(bestfis, f4_sup_dyn, c4, h4, 3);
+	generic_fitness_comp(num_fis, bestfis, f4_sup_dyn, c4, h4, 3);
 	PID_fitness(5.8, 0.47, 2.85,f4_sup_dyn, c4,h4);
 	printf("Save plots and lookup tables? (Y/n):\n");
 	char plot = getchar();
@@ -478,8 +503,12 @@ int main(int argc, char *argv[]) {
 		gnuplot_close(h2);
 		gnuplot_close(h3);
 		gnuplot_close(h4);
-		fis_destroy(bestfis);
-		specs_clear(spcs);
+		for (i = 0; i < num_fis; i++) {
+			fis_destroy(bestfis[i]);
+			specs_clear(spcs[i]);
+		}
+		free(bestfis);
+		free(spcs);
 		free(hp);
 		return 0;
 	}
@@ -499,7 +528,7 @@ int main(int argc, char *argv[]) {
 	gnuplot_close(h2);
 	gnuplot_close(h3);
 	gnuplot_close(h4);
-
+*/
 	/*Generate lookup tables for MATLAB*/
 	/*
 	#ifndef FUZZY
@@ -535,8 +564,12 @@ int main(int argc, char *argv[]) {
 	#endif
 	*/
 
-	fis_destroy(bestfis);
-	specs_clear(spcs);
+	for (i = 0; i < num_fis; i++) {
+		fis_destroy(bestfis[i]);
+		specs_clear(spcs[i]);
+	}
+	free(bestfis);
+	free(spcs);
 	free(hp);
 
 	return 0;

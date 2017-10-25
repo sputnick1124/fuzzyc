@@ -237,7 +237,6 @@ population_switch(
 
 void
 population_switch_cascade(
-    int num_pop,
 	struct Individual *** pop1s[],
 	struct Individual *** pop2s[]);
 
@@ -270,12 +269,11 @@ run_ga(
 
 void
 run_cascade_ga(
-	struct Fis ** fis_list,
-	int num,
-	struct Specs ** spcs,
+	int num_pop,
+	struct Fis * fis_list[num_pop],
+	struct Specs * spcs[num_pop],
 	struct HyperParams * hp,
 	fitness_fcn_cascade fit_fcn,
-	int max_gen,
 	FILE * fis_log);
 
 #endif
