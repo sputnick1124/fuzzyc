@@ -815,12 +815,6 @@ population_iter_cascade(
 {
 	int pop, ind;
 	for (pop = 0; pop < num_pop; pop++) {
-		printf("pop: %d of %d\n",pop, num_pop);
-		for (ind = 0; ind < hp->pop_size; ind++) {
-			printf("ind: %d of %d\n", ind, hp->pop_size);
-			individual_print(pop_now[pop][ind], spcs[pop], stdout);
-			individual_print(pop_next[pop][ind], spcs[pop], stdout);
-		}
 		population_iter(
 				pop_now[pop],
 				pop_next[pop],
@@ -846,7 +840,6 @@ population_iter(
 	int num_cross = pop_size * hp->crossover;
 	int num_mut = pop_size * hp->mutate;
 	for (ind = 0; ind < pop_size; ind++) {
-//		printf("%d\t",ind);
 		if (ind < num_elite) {
 			individual_copy(
 				pop_now[rank[ind]],
@@ -990,32 +983,24 @@ population_rank_cascade(
     struct Fis * tmp_fis[num_pop];
     struct Specs * tmp_spcs[num_pop];
     // Parallelize with omp directives
-    //#pragma omp parallel private(tmp_fis, tmp_spcs)
+    #pragma omp parallel private(tmp_fis, tmp_spcs, pop)
     {
-        //#pragma omp for
+        #pragma omp for
         for (ind = 0; ind < pop_size; ind++) {
-			printf("----------------------------------------------------------------------------------\n");
-			printf("ind: %d of %d\n",ind, pop_size-1);
-			printf("----------------------------------------------------------------------------------\n");
             for (pop = 0; pop < num_pop; pop++) {
-				individual_print(populations[pop][ind], spcs[pop], stdout);
                 tmp_spcs[pop] = specs_copy(spcs[pop]);
                 tmp_fis[pop] = individual_to_fis(populations[pop][ind],tmp_spcs[pop]);
             }
             tmp_fit = fit_fcn(num_pop, tmp_fis);
-			printf("fitness = %f\n", tmp_fit);
-			//printf("%f, ",tmp_fit);
             fitness[ind] = tmp_fit;
             ranked_fitness[ind] = &fitness[ind];
             for (pop = 0; pop < num_pop; pop++) {
                 fis_destroy(tmp_fis[pop]);
                 specs_clear(tmp_spcs[pop]);
             }
-			printf("----------------------------------------------------------------------------------\n");
         }
     } //end omp parallelization
     *fit_min = minimum(pop_size, fitness);
-	//printf("\nmin = %f\n",*fit_min);
     qsort(ranked_fitness, pop_size, sizeof(double *), cmpdouble_p);
     for (ind = 0; ind < pop_size; ind++) {
         rank[ind] = (int)(ranked_fitness[ind] - &fitness[0]);
@@ -1076,14 +1061,10 @@ run_ga(
 		spcs->rules);
 
 	for (gen = 0; gen < hp->max_gen; gen++) {
-//		printf("pop1 is at %p \t pop2 is at %p\n", pop1, pop2);
 		population_rank(hp->pop_size, rank, pop1, spcs, fit_fcn, &fitness_hist[gen]);
 		printf("Ind[%d] Fitness: %f\n",rank[0],fitness_hist[gen]);
-//		individual_print(pop1[rank[0]], ga_log);
         int stag =50;
-//        printf("rolling average= %f, current fitness=%f\n",sum_d(&fitness_hist[gen-stag],stag)/(double)stag,fitness_hist[gen]);
 		if ( (gen > stag) && (fabs(sum_d(&fitness_hist[gen - stag], stag)/(double)stag - fitness_hist[gen]) < 1e-7)) {
-//		if ( fitness_hist[gen] < 6.15 ) {
 			struct Fis * ret_fis =  individual_to_fis(pop1[rank[0]],spcs);
 			printf("Best fitness:%f\n",fit_fcn(ret_fis));
 			individual_print(pop1[rank[0]], spcs, fis_log);
@@ -1148,19 +1129,15 @@ run_cascade_ga(
 			spcs[pop]->num_params,
 			spcs[pop]->num_rule,
 			spcs[pop]->rules);
-		//individual_print(pop1s[pop][0], spcs[pop], stdout);
 	}
 
 	for (gen = 0; gen < hp->max_gen; gen++) {
-//		printf("pop1 is at %p \t pop2 is at %p\n", pop1, pop2);
 		population_rank_cascade(num_pop, hp->pop_size, rank, pop1s, spcs, fit_fcn, &fitness_hist[gen]);
 		printf("Ind[%d] Fitness: %f\n",rank[0],fitness_hist[gen]);
-		//printf("run_cascade_ga: pop1s @ %d\tpop2s @ %d\n",pop1s, pop2s);
 //		individual_print(pop1[rank[0]], ga_log);
 		if ( (gen > 10) && (fabs(sum_d(&fitness_hist[gen - 10], 10)/10.0 - fitness_hist[gen]) < 1e-17) ) {
 //			printf("Best fitness:%f\n",fit_fcn(ret_fis));
 			for (poptmp = 0; poptmp < num_pop; poptmp++) {
-				//individual_print(pop1s[poptmp][rank[0]], spcs[poptmp], fis_log);
 				fis_list[poptmp] = individual_to_fis(pop1s[poptmp][rank[0]],spcs[poptmp]);
 				individuals_destroy(pop1s[poptmp], hp->pop_size);
 				individuals_destroy(pop2s[poptmp], hp->pop_size);
@@ -1169,16 +1146,16 @@ run_cascade_ga(
 			}
 			free(pop1s);
 			free(pop2s);
-			printf("%d Generations\n",gen);
+			printf("%d Generations\n",gen + 1);
+			return;
 		} else if (gen == hp->max_gen - 1) {
-			printf("%d Generations\n",gen);
+			printf("%d Generations\n",gen + 1);
 			break;
 		}
 		population_iter_cascade(num_pop, pop1s, pop2s, rank, gen, hp, spcs);
 		population_switch_cascade(&pop1s, &pop2s);
 	}
 	for (poptmp = 0; poptmp < num_pop; poptmp++) {
-		//individual_print(pop1s[poptmp][rank[0]], spcs[poptmp], fis_log);
 		fis_list[poptmp] = individual_to_fis(pop1s[poptmp][rank[0]],spcs[poptmp]);
 		individuals_destroy(pop1s[poptmp], hp->pop_size);
 		individuals_destroy(pop2s[poptmp], hp->pop_size);

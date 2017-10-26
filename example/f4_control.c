@@ -59,13 +59,13 @@ double stepinfo(int nsteps, double t[nsteps], double x[nsteps], int flag) {
 		fprintf(fd,"& %0.2f & %0.2f & %0.2f & %0.3f & %0.2f\\\\\\cline{2-6}\n",ts,tr,tp,max,xf);
 		fclose(fd);
 	} else {}
-//	return (ts + 2*os + tr + tp);
+	return (ts + 3*os + tr + tp);
 //    return ts;
-    int S = 0;
-    for (i = 0; i < nsteps; i++) {
-        S += x[i]>1 ? x[i] : 0;
-   }
-    return S;
+//    int S = 0;
+//    for (i = 0; i < nsteps; i++) {
+//        S += x[i]>1 ? x[i] : 0;
+//   }
+//    return S;
 }
 
 int f4_dyn(double t, const double y[], double f[],
@@ -418,11 +418,11 @@ int main(int argc, char *argv[]) {
 	}
 	struct HyperParams * hp = malloc(sizeof(struct HyperParams));
 
-	hp->pop_size = 11;
+	hp->pop_size = 100;
 	hp->elite = 0.05;
 	hp->crossover = 0.5;
 	hp->mutate = 0.25;
-	hp->max_gen = 5;
+	hp->max_gen = 100;
 
 	FILE * fd = fopen("output.fis", "w");
 	run_cascade_ga(num_fis, bestfis, spcs, hp, f4_fitness, fd);
@@ -443,7 +443,7 @@ int main(int argc, char *argv[]) {
 
 //	f4_fis_plot(bestfis);
 //	fis_print(bestfis,NULL);
-/*
+
 	gnuplot_ctrl * h1;
 	gnuplot_ctrl * h2;
 	gnuplot_ctrl * h3;
@@ -528,7 +528,7 @@ int main(int argc, char *argv[]) {
 	gnuplot_close(h2);
 	gnuplot_close(h3);
 	gnuplot_close(h4);
-*/
+
 	/*Generate lookup tables for MATLAB*/
 	/*
 	#ifndef FUZZY
