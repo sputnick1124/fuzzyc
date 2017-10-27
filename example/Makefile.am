@@ -1,6 +1,6 @@
 AM_CFLAGS = -O4 -fopenmp -I../src
 
-noinst_PROGRAMS = simple_example2 ga_example spring_mass_ode_control f4_dynamics f4_control acc2
+noinst_PROGRAMS = simple_example2 ga_example spring_mass_ode_control f4_dynamics f4_control acc2 verify_fuzzy
 
 simple_example2_SOURCES = simple_example2.c ../src/fuzzy.c
 
@@ -11,6 +11,8 @@ spring_mass_ode_control_SOURCES = spring_mass_ode_control.c ../src/gnuplot_i.c .
 f4_dynamics_SOURCES = f4_dynamics.c ../src/gnuplot_i.c ../src/fuzzy.c ../src/ga.c
 
 f4_control_SOURCES = f4_control.c ../src/gnuplot_i.c ../src/fuzzy.c ../src/ga.c
+
+verify_fuzzy_SOURCES = verify_fuzzy.c ../src/ga.c ../src/fuzzy.c ../src/gnuplot_i.c
 
 acc2_SOURCES = acc2.c ../src/gnuplot_i.c ../src/fuzzy.c ../src/ga.c
 

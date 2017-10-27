@@ -21,7 +21,7 @@ static const double scalar = 5.0;
 static const double abs_err = 1e-10;
 static const double rel_err = 1e-10;
 static const int nout = 3;
-static const double ep_i = 1.0;
+static const double ep_i = 0.0;
 
 static char * filenames[4] = {"approach.tex", "deg.tex", "sub.tex", "sup.tex"};
 

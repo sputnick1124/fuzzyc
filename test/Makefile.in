@@ -86,7 +86,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-noinst_PROGRAMS = ga_tests$(EXEEXT) verify_fuzzy$(EXEEXT)
+noinst_PROGRAMS = ga_tests$(EXEEXT)
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -103,10 +103,6 @@ am_ga_tests_OBJECTS = ga_tests.$(OBJEXT) ../src/ga.$(OBJEXT) \
 	../src/fuzzy.$(OBJEXT)
 ga_tests_OBJECTS = $(am_ga_tests_OBJECTS)
 ga_tests_LDADD = $(LDADD)
-am_verify_fuzzy_OBJECTS = verify_fuzzy.$(OBJEXT) ../src/ga.$(OBJEXT) \
-	../src/fuzzy.$(OBJEXT) ../src/gnuplot_i.$(OBJEXT)
-verify_fuzzy_OBJECTS = $(am_verify_fuzzy_OBJECTS)
-verify_fuzzy_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -135,8 +131,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(ga_tests_SOURCES) $(verify_fuzzy_SOURCES)
-DIST_SOURCES = $(ga_tests_SOURCES) $(verify_fuzzy_SOURCES)
+SOURCES = $(ga_tests_SOURCES)
+DIST_SOURCES = $(ga_tests_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -207,6 +203,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -257,7 +254,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -fopenmp -I../src
 ga_tests_SOURCES = ga_tests.c ../src/ga.c ../src/fuzzy.c
-verify_fuzzy_SOURCES = verify_fuzzy.c ../src/ga.c ../src/fuzzy.c ../src/gnuplot_i.c
 all: all-am
 
 .SUFFIXES:
@@ -308,12 +304,6 @@ clean-noinstPROGRAMS:
 ga_tests$(EXEEXT): $(ga_tests_OBJECTS) $(ga_tests_DEPENDENCIES) $(EXTRA_ga_tests_DEPENDENCIES) 
 	@rm -f ga_tests$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ga_tests_OBJECTS) $(ga_tests_LDADD) $(LIBS)
-../src/gnuplot_i.$(OBJEXT): ../src/$(am__dirstamp) \
-	../src/$(DEPDIR)/$(am__dirstamp)
-
-verify_fuzzy$(EXEEXT): $(verify_fuzzy_OBJECTS) $(verify_fuzzy_DEPENDENCIES) $(EXTRA_verify_fuzzy_DEPENDENCIES) 
-	@rm -f verify_fuzzy$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(verify_fuzzy_OBJECTS) $(verify_fuzzy_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -324,9 +314,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fuzzy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/ga.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/gnuplot_i.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ga_tests.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/verify_fuzzy.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
