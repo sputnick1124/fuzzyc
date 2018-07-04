@@ -117,7 +117,7 @@ main(void)
 	hp->max_gen = 10000;
 
 	struct Fis * bestfis = run_ga(spcs, hp, fit_sine, NULL);
-
+/*
 	int r;
 	for (r = 0; r < spcs->num_rule; r++) {
 		printf("rule output mf: %f, %f, %f\n",
@@ -125,19 +125,20 @@ main(void)
 				bestfis->rule_list[r]->output[0][1],
 				bestfis->rule_list[r]->output[0][2]);
 	}
+*/
 	plot_line(bestfis);
 	free(hp);
 
 
 	specs_clear(spcs);
 
-//	double x[1], out[1];
-/*	while (1) {
+/*	double x[1], out[1];
+	while (1) {
 		scanf("%f\n",&x[0]);
 		evalfis(out,x,bestfis);
 		printf("result = %f\n",out[0]);
-	}*/
-
+	}
+*/
 	fis_destroy(bestfis);
 	return 0;
 }

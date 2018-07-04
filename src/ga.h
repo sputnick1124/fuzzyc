@@ -70,7 +70,7 @@ individual_to_fis(
 
 typedef double (*fitness_fcn)(struct Fis * fis);
 
-typedef double (*fitness_fcn_cascade)(int num, struct Fis ** fis);
+typedef double (*fitness_fcn_cascade)(int num, struct Fis * fis[num]);
 
 int sum_i(int adds[], size_t len);
 
@@ -221,9 +221,24 @@ population_iter(
     struct Specs * spcs);
 
 void
+population_iter_cascade(
+    int num_pop,
+    struct Individual ** pop_now[],
+    struct Individual ** pop_next[],
+    int rank[],
+    int cur_gen,
+    struct HyperParams * hp,
+    struct Specs ** spcs);
+
+void
 population_switch(
 	struct Individual *** pop1,
 	struct Individual *** pop2);
+
+void
+population_switch_cascade(
+	struct Individual *** pop1s[],
+	struct Individual *** pop2s[]);
 
 void
 population_rank(
@@ -236,11 +251,12 @@ population_rank(
 
 void
 population_rank_cascade(
-	int num,
-	int ** rank,
-	struct Individual ** populations[num],
-	struct Specs * spcs[num],
-	double (*fitness_fcn_cascade)(int num, struct Fis ** fis_list),
+	int num_pop,
+    int pop_size,
+	int rank[pop_size],
+	struct Individual ** populations[num_pop],
+	struct Specs * spcs[num_pop],
+	double (*fitness_fcn_cascade)(int num, struct Fis * fis_list[]),
 	double *fit_min);
 
 
@@ -253,12 +269,11 @@ run_ga(
 
 void
 run_cascade_ga(
-	struct Fis ** fis_list,
-	int num,
-	struct Specs ** spcs,
-	struct HyperParams ** hp,
+	int num_pop,
+	struct Fis * fis_list[num_pop],
+	struct Specs * spcs[num_pop],
+	struct HyperParams * hp,
 	fitness_fcn_cascade fit_fcn,
-	int max_gen,
 	FILE * fis_log);
 
 #endif

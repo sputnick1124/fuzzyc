@@ -1,11 +1,11 @@
-AM_CFLAGS = -O4 -Wall -fopenmp
+AM_CFLAGS = -O4 -Wall -fopenmp -fPIC
 AM_LDFLAGS = -lm
 
-#lib_LIBRARIES = libfuzzy.a libga.a
+lib_LIBRARIES = libfuzzy.a libga.a
 
-#libfuzzy_a_SOURCES = fuzzy.c
+libfuzzy_a_SOURCES = fuzzy.c
 
-#libga_a_SOURCES = fuzzy.c ga.c
+libga_a_SOURCES = fuzzy.c ga.c
 
 
 
@@ -17,4 +17,3 @@ fuzzy.o: fuzzy.c
 
 fis_utils.o: fis_utils.c
 	gcc ${CFLAGS} -o fis_utils.o -c fis_utils.c ${LDFLAGS}
-

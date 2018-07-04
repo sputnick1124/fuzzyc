@@ -108,8 +108,9 @@ int main(void)
 	while (1) {
 //		scanf("%lf %lf", &x[0], &x[1]);
 //		printf("x = [%f, %f]\n",x[0],x[1]);
-		scanf("%lf", &x[0]);
-		printf("x = [%f]\n", x[0]);
+		if (scanf("%lf", &x[0]) == 0){
+			printf("x = [%f]\n", x[0]);
+		}
 		evalfis(out,x,fis);
 		printf("%f\n",out[0]);
 	}
