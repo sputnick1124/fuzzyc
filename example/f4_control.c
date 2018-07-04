@@ -21,7 +21,7 @@ static const double scalar = 5.0;
 static const double abs_err = 1e-10;
 static const double rel_err = 1e-10;
 static const int nout = 3;
-static const double ep_i = 0.0;
+static const double ep_i = 1.0;
 
 static char * filenames[4] = {"approach.tex", "deg.tex", "sub.tex", "sup.tex"};
 
@@ -184,9 +184,14 @@ generic_fitness_comp(int num_fis, struct Fis * fis[num_fis],
 		e[0] = (ep[i] + scalar / 2.0) / scalar;
 		e[1] = (ei[i] + scalar / 2.0) / scalar;
 		e[2] = (ed[i] + scalar / 2.0) / scalar;
-		for (fisc = 0; fisc < num_fis; fisc++) {
-			evalfis(&out[fisc],&e[fisc],fis[fisc]);
-		}
+        double epi[2] = {e[0], e[1]};
+        double epd[2] = {e[0], e[2]};
+        evalfis(&out[0], &e[0], fis[0]);
+        evalfis(&out[1], epi, fis[1]);
+        evalfis(&out[2], epd, fis[2]);
+		/*for (fisc = 0; fisc < num_fis; fisc++) {*/
+			/*evalfis(&out[fisc],e,fis[fisc]);*/
+		/*}*/
 		#ifdef FUZZY
 		u[0] = out[0] * 10 - 5; //If single output FIS directly controls force
 		#endif
@@ -257,9 +262,17 @@ double f4_fitness(int num_fis, struct Fis * fis[num_fis]) {
 		e[0] = (ep[i] + scalar / 2.0) / scalar;
 		e[1] = (ei[i] + scalar / 2.0) / scalar;
 		e[2] = (ed[i] + scalar / 2.0) / scalar;
-		for (fisc = 0; fisc < num_fis; fisc++) {
-			evalfis(&out[fisc],&e[fisc],fis[fisc]);
-		}
+        double epi[2] = {e[0], e[1]};
+        double epd[2] = {e[0], e[2]};
+        evalfis(&out[0], &e[0], fis[0]);
+        evalfis(&out[1], epi, fis[1]);
+        evalfis(&out[2], epd, fis[2]);
+		/*for (fisc = 0; fisc < num_fis; fisc++) {*/
+			/*evalfis(&out[fisc],e,fis[fisc]);*/
+		/*}*/
+		/*for (fisc = 0; fisc < num_fis; fisc++) {*/
+			/*evalfis(&out[fisc],&e[fisc],fis[fisc]);*/
+		/*}*/
 		#ifdef FUZZY
 		u[0] = out[0] * 10 - 5; //If single output FIS directly controls force
 		#endif
@@ -366,14 +379,19 @@ void f4_fis_plot(int num_fis, struct Fis * fis[num_fis]) {
 		e[0] = (ep[i] + scalar / 2.0) / scalar;
 		e[1] = (ei[i] + scalar / 2.0) / scalar;
 		e[2] = (ed[i] + scalar / 2.0) / scalar;
-		for (fisc = 0; fisc < num_fis; fisc++) {
-			evalfis(&out[fisc],&e[fisc],fis[fisc]);
-		}
+        double epi[2] = {e[0], e[1]};
+        double epd[2] = {e[0], e[2]};
+        evalfis(&out[0], &e[0], fis[0]);
+        evalfis(&out[1], epi, fis[1]);
+        evalfis(&out[2], epd, fis[2]);
+		/*for (fisc = 0; fisc < num_fis; fisc++) {*/
+			/*evalfis(&out[fisc],e,fis[fisc]);*/
+		/*}*/
 		#ifdef FUZZY
 		u[0] = out[0] * 10 - 5; //If single output FIS directly controls force
 		#endif
 		#ifndef FUZZY
-		kp = out[0] * 20; ki = out[1] * 5; kd = out[2] * 10; //If fuzzy-PID
+		kp = out[0] * 30; ki = out[1] * 10; kd = out[2] * 20; //If fuzzy-PID
 		u[0] = kp*ep[i] + ki*ei[i] + kd*ed[i];
 		#endif
 	}
@@ -400,19 +418,20 @@ int main(int argc, char *argv[]) {
 	srand48(rand());
 	int i;
 	int num_fis = 3;
-	int num_in = 1;
-	int in_mfs[3] = {3,3,3};
+	int num_in = 2;
+	int in_mfs[3] = {3,3};
 //	#ifndef FUZZY
 //	int num_out = 3;
 //	int out_mfs[3] = {5,5,5};
 //	#endif
 //	#ifdef FUZZY
 	int num_out = 1;
-	int out_mfs[1] = {3};
+	int out_mfs[1] = {9};
 //	#endif
 
 	struct Specs ** spcs = malloc(sizeof(struct Specs*) * num_fis);
 	struct Fis ** bestfis = malloc(sizeof(struct Fis*) * num_fis);
+    /*spcs[0] = specs_set(1, (int[]){8}, 1, (int[]){8});*/
 	for (i = 0; i < num_fis; i++) {
 		spcs[i] = specs_set(num_in, in_mfs, num_out, out_mfs);
 	}
@@ -426,6 +445,9 @@ int main(int argc, char *argv[]) {
 
 	FILE * fd = fopen("output.fis", "w");
 	run_cascade_ga(num_fis, bestfis, spcs, hp, f4_fitness, fd);
+
+    /*f4_fis_plot(bestfis);*/
+    /*fis_print(bestfis[i],fd);*/
 	fclose(fd);
 
 /** Plot the comparison graphs between PID- and Fuzzy-controlled systems**/
@@ -440,9 +462,6 @@ int main(int argc, char *argv[]) {
 	time(&T);
 	struct tm * timeinfo = localtime(&T);
 	strftime(outdir,sizeof(outdir),"%H-%M-%S/",timeinfo);
-
-//	f4_fis_plot(bestfis);
-//	fis_print(bestfis,NULL);
 
 	gnuplot_ctrl * h1;
 	gnuplot_ctrl * h2;
