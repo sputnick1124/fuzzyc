@@ -4,7 +4,8 @@
 
 tags
 
-lib/
+lib/*
+bin/*
 
 *.tex
 *.eps
